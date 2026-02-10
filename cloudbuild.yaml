@@ -48,6 +48,9 @@ steps:
       - --set-secrets
       - DATABASE_URL_POOLER=$_DB_URL_SECRET:latest,DATABASE_URL=$_DB_URL_SECRET:latest,FIREBASE_SERVICE_ACCOUNT=$_FIREBASE_SA_SECRET:latest
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 images:
   - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
 
