@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStripeConfig } from "@/hooks/useStripe";
 import { StripePaymentModal } from "./StripePaymentScreen";
-import { CreditCard } from "lucide-react";
 import paymentMethodsImg from "@assets/payment-methods.png";
 
 // Payment method logos (Visa, Mastercard, Apple Pay, Google Pay)
@@ -63,16 +62,15 @@ export function StripePayButton({
       <Button
         variant={variant}
         size={size}
-        className={className}
+        className={`overflow-hidden ${className}`}
         disabled={disabled}
         onClick={handleClick}
       >
         {children || (
-          <>
-            <CreditCard className="w-4 h-4 mr-2" />
-            Pay ${amount.toFixed(2)}
+          <span className="flex items-center justify-center gap-1.5 truncate">
+            <span className="truncate">Pay ${amount.toFixed(2)}</span>
             <PaymentLogos />
-          </>
+          </span>
         )}
       </Button>
 

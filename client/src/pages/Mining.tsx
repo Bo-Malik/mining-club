@@ -598,7 +598,7 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
   );
 }
 
-function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (data: { hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number }) => void; isPending?: boolean; userId?: string | null }) {
+function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }: { onPurchase: (data: { hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number }) => void; onCryptoPurchase: (data: { hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number }) => void; isPending?: boolean; userId?: string | null }) {
   const { convert, getSymbol } = useCurrency();
   const { btcPrice } = useBTCPrice();
   
@@ -712,7 +712,8 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
               )}
               <button
                 onClick={() => {
-                  onPurchase({
+                  // Use the confirmation popup flow
+                  onCryptoPurchase({
                     hashrate: btcHashrate,
                     cost: estimatedCost,
                     dailyReturnBTC: dailyBTCReturn,
@@ -720,12 +721,11 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
                   });
                 }}
                 disabled={isPending}
-                className="w-12 h-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center gap-0.5 transition-all hover:scale-105 active:scale-95"
+                className="w-14 h-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center gap-1 transition-all hover:scale-105 active:scale-95"
                 title="Pay with crypto balance"
               >
-                <span className="text-amber-400 font-bold text-sm">₿</span>
-                <span className="text-[8px] text-muted-foreground">/</span>
-                <span className="text-emerald-400 font-bold text-[10px]">$</span>
+                <span className="text-amber-400 font-bold text-base">₿</span>
+                <span className="text-emerald-400 font-bold text-base">$</span>
               </button>
             </div>
           </div>
@@ -852,6 +852,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
   const [paymentCurrency, setPaymentCurrency] = useState<CryptoType>("USDT");
   const [cryptoConfirmOpen, setCryptoConfirmOpen] = useState(false);
   const [pendingPurchase, setPendingPurchase] = useState<MiningPackage | null>(null);
+  const [pendingCustomPurchase, setPendingCustomPurchase] = useState<{ hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const user = getCurrentUser();
@@ -1069,6 +1070,72 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
     
     createPurchase.mutate(purchasePayload);
   };
+
+  // Show custom hashrate crypto payment confirmation popup
+  const showCustomCryptoConfirmation = (data: { hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number }) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to purchase mining packages.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!dbUserId) {
+      toast({
+        title: "Account Not Ready",
+        description: "Please refresh once, then try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Convert USD cost to selected payment currency
+    const costInCrypto = convertUSDToCrypto(data.cost, paymentCurrency);
+    
+    if (availableBalance < costInCrypto) {
+      const amountNeeded = costInCrypto - availableBalance;
+      toast({
+        title: "Deposit Required",
+        description: `You need ${amountNeeded.toFixed(paymentCurrency === "USDT" ? 2 : 6)} more ${paymentCurrency}. Total: ${costInCrypto.toFixed(paymentCurrency === "USDT" ? 2 : 6)} ${paymentCurrency}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Show confirmation popup
+    setPendingCustomPurchase(data);
+    setCryptoConfirmOpen(true);
+  };
+
+  // Execute custom hashrate crypto purchase after confirmation
+  const handleCustomPurchaseConfirm = (data: { hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number }) => {
+    const costInCrypto = convertUSDToCrypto(data.cost, paymentCurrency);
+
+    // Calculate payback months safely
+    const dailyUSDReturn = data.dailyReturnBTC * btcPrice;
+    const paybackDays = dailyUSDReturn > 0 ? data.cost / dailyUSDReturn : 365;
+    const paybackMonths = Math.ceil(paybackDays / 30);
+    
+    const purchasePayload = {
+      userId: dbUserId,
+      packageName: "Custom",
+      crypto: "BTC",
+      symbol: paymentCurrency,
+      amount: costInCrypto,
+      hashrate: data.hashrate,
+      hashrateUnit: "TH/s",
+      efficiency: "15W/TH",
+      dailyReturnBTC: data.dailyReturnBTC,
+      returnPercent: data.returnPercent,
+      paybackMonths: paybackMonths,
+    };
+    
+    createPurchase.mutate(purchasePayload);
+    setCryptoConfirmOpen(false);
+    setPendingCustomPurchase(null);
+  };
   
   // Filter out solo mining purchases - they should only appear on Solo Mining page
   const activePurchases = (miningPurchases || []).filter((p: any) => 
@@ -1207,25 +1274,25 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab("hot")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3.5 rounded-2xl font-semibold text-sm transition-all whitespace-nowrap ${
                 activeTab === "hot"
                   ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
                   : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
               }`}
             >
-              <Calculator className="w-5 h-5" />
+              <Calculator className="w-4 h-4" />
               <span>Custom TH/s</span>
-              <span className="text-[9px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full uppercase">HOT</span>
+              <span className="text-[9px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full uppercase">HOT</span>
             </button>
             <button
               onClick={() => setActiveTab("devices")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3.5 rounded-2xl font-semibold text-sm transition-all whitespace-nowrap ${
                 activeTab === "devices"
                   ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-2 border-amber-500/40 shadow-lg shadow-amber-500/10"
                   : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
               }`}
             >
-              <Cpu className="w-5 h-5" />
+              <Cpu className="w-4 h-4" />
               <span>Packages</span>
             </button>
           </div>
@@ -1280,7 +1347,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
                 transition={{ duration: 0.25 }}
                 className="space-y-4"
               >
-                <HashRateCalculator onPurchase={handleCustomPurchase} isPending={createPurchase.isPending} userId={dbUserId} />
+                <HashRateCalculator onPurchase={handleCustomPurchase} onCryptoPurchase={showCustomCryptoConfirmation} isPending={createPurchase.isPending} userId={dbUserId} />
                 {hasContracts && (
                   <>
                     <HashRateChart data={chartData} title="Earnings Over Time" />
@@ -1355,6 +1422,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
             </DialogDescription>
           </DialogHeader>
           
+          {/* Package purchase confirmation */}
           {pendingPurchase && (
             <div className="space-y-3 py-2">
               <div className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -1382,6 +1450,35 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
               </p>
             </div>
           )}
+
+          {/* Custom hashrate purchase confirmation */}
+          {pendingCustomPurchase && !pendingPurchase && (
+            <div className="space-y-3 py-2">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-foreground">Custom BTC Mining</span>
+                  <span className="text-xs text-muted-foreground">{pendingCustomPurchase.hashrate} TH/s</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Payment Amount</span>
+                  <span className="text-base font-bold text-amber-400">
+                    {convertUSDToCrypto(pendingCustomPurchase.cost, paymentCurrency).toFixed(paymentCurrency === "USDT" ? 2 : 6)} {paymentCurrency}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <span className="text-xs text-muted-foreground">Your Balance</span>
+                <span className="text-sm font-semibold text-emerald-400">
+                  {availableBalance.toFixed(paymentCurrency === "USDT" ? 2 : 6)} {paymentCurrency}
+                </span>
+              </div>
+              
+              <p className="text-[10px] text-muted-foreground text-center">
+                This will deduct from your {paymentCurrency} wallet balance
+              </p>
+            </div>
+          )}
           
           <DialogFooter className="flex gap-2">
             <Button
@@ -1389,13 +1486,20 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
               onClick={() => {
                 setCryptoConfirmOpen(false);
                 setPendingPurchase(null);
+                setPendingCustomPurchase(null);
               }}
               className="flex-1"
             >
               Cancel
             </Button>
             <Button
-              onClick={() => pendingPurchase && handlePackagePurchase(pendingPurchase)}
+              onClick={() => {
+                if (pendingPurchase) {
+                  handlePackagePurchase(pendingPurchase);
+                } else if (pendingCustomPurchase) {
+                  handleCustomPurchaseConfirm(pendingCustomPurchase);
+                }
+              }}
               disabled={createPurchase.isPending}
               className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0"
             >
