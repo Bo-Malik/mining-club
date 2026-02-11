@@ -1700,9 +1700,9 @@ export async function registerAdminRoutes(app: Express) {
 
       stripeService.invalidateStripeCache();
       res.json(created[0]);
-    } catch (error) {
-      console.error("Error updating Stripe settings:", error);
-      res.status(500).json({ error: "Failed to update Stripe settings" });
+    } catch (error: any) {
+      console.error("Error updating Stripe settings:", error?.message || error);
+      res.status(500).json({ error: "Failed to update Stripe settings", details: error?.message || String(error) });
     }
   });
 

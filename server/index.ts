@@ -7,6 +7,7 @@ import { registerAdminRoutes } from "./admin-routes";
 import { initializeFirebaseAdmin } from "./firebase-admin";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { ensureTablesExist } from "./ensure-tables";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,6 +71,9 @@ app.use((req, res, next) => {
 (async () => {
   // Initialize Firebase Admin SDK
   initializeFirebaseAdmin();
+  
+  // Ensure all database tables exist (auto-migration)
+  await ensureTablesExist();
   
   // Serve attached assets statically
   const attachedAssetsPath = path.resolve(__dirname, "..", "attached_assets");

@@ -2508,10 +2508,11 @@ export function DatabaseAdmin() {
                             queryClient.invalidateQueries({ queryKey: ["/api/admin/stripe/settings"] });
                             toast({ title: "Stripe Settings Saved", description: "All keys and settings have been updated" });
                           } else {
-                            toast({ title: "Error", description: "Failed to save settings", variant: "destructive" });
+                            const errData = await res.json().catch(() => ({}));
+                            toast({ title: "Error", description: errData?.details || errData?.error || `Failed to save settings (${res.status})`, variant: "destructive" });
                           }
-                        } catch {
-                          toast({ title: "Error", description: "Network error", variant: "destructive" });
+                        } catch (err: any) {
+                          toast({ title: "Error", description: err?.message || "Network error", variant: "destructive" });
                         }
                       }}
                     >
