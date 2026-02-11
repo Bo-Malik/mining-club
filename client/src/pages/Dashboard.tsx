@@ -988,15 +988,33 @@ export function Dashboard({
               </PopoverContent>
             </Popover>
             
-            <Button
-              data-testid="button-create-miner"
-              onClick={onNavigateToMining}
-              className="flex-1 liquid-glass border-0 bg-primary/20 hover:bg-primary/30 text-primary flex items-center justify-center h-12 rounded-2xl"
-              variant="ghost"
-              type="button"
+            <motion.div
+              className="relative flex-1"
+              animate={{
+                boxShadow: [
+                  "0 0 15px 2px rgba(245, 158, 11, 0.3)",
+                  "0 0 25px 4px rgba(245, 158, 11, 0.5)",
+                  "0 0 15px 2px rgba(245, 158, 11, 0.3)",
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              style={{ borderRadius: "1rem" }}
             >
-              <Fan className="w-3 h-3" />
-            </Button>
+              <Button
+                data-testid="button-create-miner"
+                onClick={onNavigateToMining}
+                className="w-full relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 flex items-center justify-center h-12 rounded-2xl font-semibold shadow-lg shadow-amber-500/30"
+                variant="ghost"
+                type="button"
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  animate={{ x: ["-100%", "200%"] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                />
+                <Fan className="w-4 h-4" />
+              </Button>
+            </motion.div>
 
             <Popover open={withdrawOpen} onOpenChange={setWithdrawOpen}>
               <PopoverTrigger asChild>
@@ -1172,6 +1190,56 @@ export function Dashboard({
             </div>
           </GlassCard>
         </div>
+      </motion.div>
+
+      {/* Mining Promo Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        onClick={onNavigateToMining}
+        className="cursor-pointer"
+      >
+        <motion.div
+          className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/20 hover:border-amber-500/40 transition-all"
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+        >
+          {/* Animated background glow */}
+          <motion.div
+            className="absolute -inset-1 bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0"
+            animate={{ x: ["-100%", "200%"] }}
+            transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+          />
+          
+          <div className="relative flex items-center gap-3">
+            <motion.div
+              className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/30 to-orange-500/20 flex items-center justify-center"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <span className="text-2xl">⛏️</span>
+            </motion.div>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="text-sm font-bold text-foreground">Start Mining Bitcoin</p>
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Buy mining devices & hashrate plans • Earn daily BTC rewards
+              </p>
+            </div>
+            
+            <motion.div
+              className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center"
+              animate={{ x: [0, 5, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <ChevronRight className="w-5 h-5 text-amber-400" />
+            </motion.div>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Referral and Rate App Cards */}

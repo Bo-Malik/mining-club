@@ -545,37 +545,67 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
           </span>
         </div>
 
-        {/* Buy buttons - Clear CTA */}
-        <div className="space-y-2">
-          <Button 
-            size="sm"
-            className={`w-full h-10 font-semibold ${isBTC 
-              ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0" 
-              : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0"
-            }`}
-            disabled={isPending}
-            onClick={() => onPurchase(pkg)}
-            data-testid={`button-buy-${pkg.id}`}
-          >
-            <Wallet className="w-4 h-4 mr-2" />
-            {isPending ? "Processing..." : "Buy with Wallet"}
-          </Button>
+        {/* Buy buttons - Card payment primary, crypto secondary */}
+        <div className="flex gap-2">
+          {/* Main CTA - Card Payment */}
           {userId && (
-            <StripePayButton
-              userId={userId}
-              amount={pkg.cost}
-              productType="mining_package"
-              productId={pkg.id}
-              productName={`${pkg.crypto} ${pkg.name} Mining Package`}
-              metadata={{ hashrate: pkg.hashrateValue, hashrateUnit: pkg.hashrateUnit, crypto: pkg.crypto }}
-              size="sm"
-              variant="outline"
-              className="w-full h-9 text-xs"
-              onPaymentSuccess={() => {
-                window.location.reload();
-              }}
-            />
+            <div className="flex-1">
+              <StripePayButton
+                userId={userId}
+                amount={pkg.cost}
+                productType="mining_package"
+                productId={pkg.id}
+                productName={`${pkg.crypto} ${pkg.name} Mining Package`}
+                metadata={{ hashrate: pkg.hashrateValue, hashrateUnit: pkg.hashrateUnit, crypto: pkg.crypto }}
+                size="sm"
+                variant="default"
+                className={`w-full h-11 font-semibold text-white border-0 shadow-lg ${isBTC 
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-amber-500/25" 
+                  : "bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-500/25"
+                }`}
+                onPaymentSuccess={() => {
+                  window.location.reload();
+                }}
+              />
+            </div>
           )}
+          
+          {/* Secondary - Crypto/Wallet Payment */}
+          <motion.button
+            onClick={() => onPurchase(pkg)}
+            disabled={isPending}
+            className="relative w-14 h-11 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30 hover:border-violet-500/50 flex items-center justify-center overflow-hidden group transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            data-testid={`button-buy-${pkg.id}`}
+            title="Pay with crypto balance"
+          >
+            {/* Animated crypto icons */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                className="absolute"
+                animate={{ 
+                  y: [-12, 12, -12],
+                  opacity: [1, 0.3, 1],
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <span className="text-amber-400 font-bold text-sm">₿</span>
+              </motion.div>
+              <motion.div
+                className="absolute"
+                animate={{ 
+                  y: [12, -12, 12],
+                  opacity: [0.3, 1, 0.3],
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <span className="text-emerald-400 font-bold text-xs">$</span>
+              </motion.div>
+            </div>
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-t from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          </motion.button>
         </div>
       </GlassCard>
     </motion.div>
@@ -660,6 +690,64 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
             <span>0.3 TH/s</span>
             <span>500 TH/s</span>
           </div>
+          
+          {/* Quick buy section right after slider */}
+          <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Cost</p>
+                <p className="text-lg font-bold text-foreground">
+                  {getSymbol()}{convert(estimatedCost).toFixed(2)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Daily Return</p>
+                <p className="text-sm font-bold text-emerald-400">
+                  +{getSymbol()}{convert(dailyUSDReturn).toFixed(2)}
+                </p>
+              </div>
+            </div>
+            
+            {/* Quick Buy Buttons */}
+            <div className="flex gap-2">
+              {userId && (
+                <div className="flex-1">
+                  <StripePayButton
+                    userId={userId}
+                    amount={estimatedCost}
+                    productType="mining_package"
+                    productName={`Custom BTC Mining ${btcHashrate} TH/s`}
+                    metadata={{ hashrate: btcHashrate, hashrateUnit: "TH/s", crypto: "BTC" }}
+                    variant="default"
+                    className="w-full h-10 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-0 shadow-lg shadow-amber-500/25"
+                    onPaymentSuccess={() => window.location.reload()}
+                  />
+                </div>
+              )}
+              <motion.button
+                onClick={() => {
+                  onPurchase({
+                    hashrate: btcHashrate,
+                    cost: estimatedCost,
+                    dailyReturnBTC: dailyBTCReturn,
+                    returnPercent: 20,
+                  });
+                }}
+                disabled={isPending}
+                className="w-12 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30 hover:border-violet-500/50 flex items-center justify-center overflow-hidden group transition-all"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Pay with crypto balance"
+              >
+                <motion.div
+                  animate={{ y: [-8, 8, -8], opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <span className="text-amber-400 font-bold text-sm">₿</span>
+                </motion.div>
+              </motion.button>
+            </div>
+          </div>
         </div>
         
         <div className="p-3 rounded-xl border border-white/[0.08] space-y-3">
@@ -740,47 +828,8 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
           )}
         </div>
         
-        <Button 
-          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
-          size="default"
-          disabled={isPending}
-          onClick={() => {
-            console.log("=== BUY CUSTOM HASHPOWER BUTTON CLICKED ===");
-            console.log("Button state:", { isPending });
-            console.log("Data being sent:", {
-              hashrate: btcHashrate,
-              cost: estimatedCost,
-              dailyBTCReturn,
-              returnPercent: 20,
-            });
-            onPurchase({
-              hashrate: btcHashrate,
-              cost: estimatedCost,
-              dailyReturnBTC: dailyBTCReturn,
-              returnPercent: 20,
-            });
-            console.log("=== onPurchase called ===");
-          }}
-          data-testid="button-buy-custom"
-        >
-          {isPending ? "Processing..." : "Buy Custom Hashpower"}
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-        {userId && (
-          <StripePayButton
-            userId={userId}
-            amount={estimatedCost}
-            productType="mining_package"
-            productName={`Custom BTC Mining ${btcHashrate} TH/s`}
-            metadata={{ hashrate: btcHashrate, hashrateUnit: "TH/s", crypto: "BTC" }}
-            variant="outline"
-            className="w-full mt-2"
-            onPaymentSuccess={() => window.location.reload()}
-          />
-        )}
-        
         <p className="text-center text-[10px] text-muted-foreground">
-          All rewards paid in BTC
+          All rewards paid in BTC • 7 year contract
         </p>
       </div>
     </GlassCard>
