@@ -8,6 +8,7 @@ interface GlassCardProps {
   delay?: number;
   glow?: "btc" | "ltc" | "primary" | "none";
   variant?: "default" | "strong" | "subtle";
+  topFade?: boolean;
   onClick?: () => void;
 }
 
@@ -18,6 +19,7 @@ export function GlassCard({
   delay = 0,
   glow = "none",
   variant = "default",
+  topFade = false,
   onClick
 }: GlassCardProps) {
   const glowClass = glow === "btc" ? "glass-glow-btc" : glow === "ltc" ? "glass-glow-ltc" : glow === "primary" ? "glass-glow-primary" : "";
@@ -36,6 +38,10 @@ export function GlassCard({
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
+      {/* Top fade overlay for transparent top effect */}
+      {topFade && (
+        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background/60 to-transparent pointer-events-none z-[1] rounded-t-2xl" />
+      )}
       <div className="relative z-10">
         {children}
       </div>

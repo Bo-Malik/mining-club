@@ -6,6 +6,7 @@ import { useNotifications } from "@/contexts/NotificationContext";
 import { ScrollAwareStatusBar } from "./ScrollAwareStatusBar";
 
 interface GlobalHeaderProps {
+  activeTab?: string;
   onOpenSettings?: () => void;
   onNavigateToHome?: () => void;
   onNavigateToWallet?: () => void;
@@ -13,6 +14,7 @@ interface GlobalHeaderProps {
 }
 
 export function GlobalHeader({
+  activeTab = "home",
   onOpenSettings,
   onNavigateToHome,
   onNavigateToWallet,
@@ -21,6 +23,11 @@ export function GlobalHeader({
   const { theme, toggleTheme } = useTheme();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Only render on home page - subpages have their own inline headers
+  if (activeTab !== "home") {
+    return null;
+  }
 
   const handleBack = () => {
     if (window.history.length > 1) {

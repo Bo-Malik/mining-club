@@ -717,7 +717,7 @@ export function Dashboard({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <LiquidGlassCard key={`portfolio-${convertedBalance}`} glow="btc" delay={0.1} variant="strong" className="relative">
+        <LiquidGlassCard key={`portfolio-${convertedBalance}`} glow="btc" delay={0.1} variant="strong" topFade className="relative">
         <div className="absolute -right-4 -top-4 w-32 h-32 pointer-events-none z-20">
           <DotLottieReact
             src="https://lottie.host/fe692048-2d8f-4966-a2d0-8f9973ce2b3c/9cdpzaKRwx.lottie"

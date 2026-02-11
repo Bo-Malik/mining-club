@@ -22,7 +22,8 @@ import {
   CalendarRange,
   HelpCircle,
   PiggyBank,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft
 } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { LiveGrowingBalance } from "@/components/LiveGrowingBalance";
@@ -997,17 +998,32 @@ export function Invest({ onNavigateToHome, onNavigateToWallet, onNavigateToInves
         className="space-y-6 pb-6"
         data-testid="page-invest"
       >
-      {/* Header */}
+      {/* Header with Back Button */}
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center gap-3"
+      >
+        <button
+          onClick={() => window.history.back()}
+          className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <div className="flex-1 text-center pr-10">
+          <h1 className="text-xl font-bold text-foreground">Earn & Yield</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Up to 19% APR • Withdraw anytime</p>
+        </div>
+      </motion.header>
+
+      {/* Hero Section */}
       <motion.div 
-        className="text-center py-4"
+        className="text-center py-2"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <PiggyBank className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">Earn & Yield</h1>
-        </div>
-        
         <motion.div
           className="text-4xl font-bold bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 bg-clip-text text-transparent mb-2"
           initial={{ scale: 0.9 }}
@@ -1017,10 +1033,6 @@ export function Invest({ onNavigateToHome, onNavigateToWallet, onNavigateToInves
         >
           Up to 19% APR
         </motion.div>
-        
-        <p className="text-muted-foreground mb-4">
-          Fixed APR rates • Withdraw anytime • Transparent earnings
-        </p>
         
         <div className="flex items-center justify-center gap-3">
           <Badge 

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeftRight, Copy, Check, AlertCircle, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Info, Loader2, CheckCircle2, X } from "lucide-react";
+import { ArrowLeftRight, Copy, Check, AlertCircle, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Info, Loader2, CheckCircle2, X, ChevronLeft } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { CryptoCard } from "@/components/CryptoCard";
 import { TransactionItem } from "@/components/TransactionItem";
@@ -628,9 +628,19 @@ export function Wallet({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
+          className="flex items-center gap-3"
         >
-          <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Multi-crypto portfolio</p>
+          <button
+            onClick={() => window.history.back()}
+            className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <div className="flex-1 text-center pr-10">
+            <h1 className="text-xl font-bold text-foreground">Wallet</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Multi-crypto portfolio</p>
+          </div>
         </motion.header>
 
       <GlassCard delay={0.1} className="relative overflow-visible">

@@ -26,6 +26,7 @@ import {
   Cpu,
   Flame,
   ChevronDown,
+  ChevronLeft,
   CreditCard,
   Wallet
 } from "lucide-react";
@@ -1195,23 +1196,33 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
         exit={{ opacity: 0 }}
         data-testid="page-mining"
       >
-        {/* Header with Quick Actions */}
+        {/* Header with Back Button */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="space-y-3"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Mining</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.history.back()}
+              className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <div className="flex-1 text-center pr-10">
+              <h1 className="text-xl font-bold text-foreground">Mining</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Buy hashpower & earn crypto
               </p>
             </div>
-            {/* Balance indicator */}
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Available</p>
+          </div>
+          
+          {/* Balance indicator */}
+          <div className="flex justify-end">
+            <div className="text-right px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+              <p className="text-[10px] text-muted-foreground">Available</p>
               <p className="text-sm font-bold text-foreground">
                 {paymentCurrency === "USDT" ? "$" : ""}{availableBalance.toFixed(paymentCurrency === "USDT" ? 2 : 6)} {paymentCurrency}
               </p>

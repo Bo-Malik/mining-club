@@ -319,8 +319,9 @@ function MobileApp() {
         <ForceUpdateModal />
       </div>
 
-      {/* Global Header - persists across all tabs */}
+      {/* Global Header - only renders on home tab */}
       <GlobalHeader
+        activeTab={activeTab}
         onOpenSettings={() => setShowSettings(true)}
         onNavigateToHome={() => setActiveTab("home")}
         onNavigateToWallet={() => setActiveTab("wallet")}
