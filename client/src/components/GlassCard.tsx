@@ -32,12 +32,9 @@ export function GlassCard({
         "liquid-glass",
         variantClass,
         glowClass,
+        topFade && "liquid-glass-top-fade",
         className
       )}
-      style={topFade ? {
-        maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,0.7) 30%, black 50%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,0.7) 30%, black 50%)'
-      } : undefined}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
