@@ -82,6 +82,25 @@ import {
 
 const ADMIN_PASSWORD = "MiningClub2024!";
 
+// Helper to make authenticated admin API requests
+function adminFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers || {});
+  headers.set("X-Admin-Key", ADMIN_PASSWORD);
+  if (!headers.has("Content-Type") && options.body) {
+    headers.set("Content-Type", "application/json");
+  }
+  return fetch(url, { ...options, headers });
+}
+
+// Query function for admin useQuery calls that includes auth
+const adminQueryFn = async ({ queryKey }: { queryKey: readonly unknown[] }) => {
+  const res = await adminFetch(queryKey.join("/") as string);
+  if (!res.ok) {
+    throw new Error(`${res.status}: ${res.statusText}`);
+  }
+  return res.json();
+};
+
 // Predefined config keys
 const CONFIG_KEYS = {
   wallet: [
@@ -354,12 +373,14 @@ export function DatabaseAdmin() {
   // Queries
   const { data: pendingDeposits = [] } = useQuery<DepositRequest[]>({
     queryKey: ["/api/admin/deposits/pending"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated,
     refetchInterval: 30000,
   });
 
   const { data: allDeposits = [] } = useQuery<DepositRequest[]>({
     queryKey: ["/api/admin/deposits/all"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated && activeNav === "deposits",
   });
 
@@ -368,24 +389,28 @@ export function DatabaseAdmin() {
     withdrawals: { pending: { amount: number; count: number }; completed: { amount: number; count: number }; rejected: { amount: number; count: number } };
   }>({
     queryKey: ["/api/admin/stats"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated,
     refetchInterval: 30000,
   });
 
   const { data: pendingWithdrawals = [], isLoading: isLoadingWithdrawals } = useQuery<any[]>({
     queryKey: ["/api/admin/withdrawals/pending"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated,
     refetchInterval: 30000,
   });
 
   const { data: autoWithdrawConfigs = [], isLoading: isLoadingAutoWithdraw } = useQuery<any[]>({
     queryKey: ["/api/admin/auto-withdrawals"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated,
     refetchInterval: 30000,
   });
 
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated && (activeNav === "users" || activeNav === "user-estimates"),
     refetchInterval: 10000,
   });
@@ -394,7 +419,7 @@ export function DatabaseAdmin() {
     queryKey: ["/api/balances", selectedUserId],
     queryFn: async () => {
       if (!selectedUserId) return { balances: [], pending: {} };
-      const res = await fetch(`/api/balances/${selectedUserId}`);
+      const res = await adminFetch(`/api/balances/${selectedUserId}`);
       if (!res.ok) throw new Error("Failed to fetch balances");
       return res.json();
     },
@@ -405,7 +430,7 @@ export function DatabaseAdmin() {
     queryKey: ["/api/admin/users", selectedUserId, "purchases"],
     queryFn: async () => {
       if (!selectedUserId) return { orders: [] };
-      const res = await fetch(`/api/admin/users/${selectedUserId}/purchases`);
+      const res = await adminFetch(`/api/admin/users/${selectedUserId}/purchases`);
       if (!res.ok) throw new Error("Failed to fetch purchases");
       return res.json();
     },
@@ -426,6 +451,7 @@ export function DatabaseAdmin() {
 
   const { data: config = [] } = useQuery<AppConfig[]>({
     queryKey: ["/api/admin/config"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated && (activeNav === "config" || activeNav === "estimates"),
   });
 
@@ -456,6 +482,7 @@ export function DatabaseAdmin() {
   // Solo mining purchases query
   const { data: soloMiningPurchases = [] } = useQuery<SoloMiningPurchase[]>({
     queryKey: ["/api/admin/solo-mining-purchases"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated,
     refetchInterval: 30000,
   });
@@ -467,11 +494,13 @@ export function DatabaseAdmin() {
   // Stripe queries
   const { data: stripeSettings, isLoading: isLoadingStripe } = useQuery<any>({
     queryKey: ["/api/admin/stripe/settings"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated && activeNav === "stripe",
   });
 
   const { data: stripePayments = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/stripe/payments"],
+    queryFn: adminQueryFn,
     enabled: isAuthenticated && activeNav === "stripe",
     refetchInterval: 30000,
   });
@@ -495,7 +524,7 @@ export function DatabaseAdmin() {
   // Mutations
   const confirmDeposit = useMutation({
     mutationFn: async (depositId: string) =>
-      fetch(`/api/admin/deposits/${depositId}/confirm`, { method: "POST" }).then(r => r.json()),
+      adminFetch(`/api/admin/deposits/${depositId}/confirm`, { method: "POST" }).then(r => r.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/deposits/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/deposits/all"] });
@@ -507,7 +536,7 @@ export function DatabaseAdmin() {
 
   const rejectDeposit = useMutation({
     mutationFn: async ({ depositId, reason }: { depositId: string; reason: string }) =>
-      fetch(`/api/admin/deposits/${depositId}/reject`, {
+      adminFetch(`/api/admin/deposits/${depositId}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason }),
@@ -525,7 +554,7 @@ export function DatabaseAdmin() {
   // Award block to solo miner mutation
   const awardBlockMutation = useMutation({
     mutationFn: async ({ purchaseId, blockReward, txHash }: { purchaseId: string; blockReward: number; txHash?: string }) => {
-      const res = await fetch(`/api/admin/solo-mining/${purchaseId}/award-block`, {
+      const res = await adminFetch(`/api/admin/solo-mining/${purchaseId}/award-block`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ blockReward, txHash }),
@@ -555,7 +584,7 @@ export function DatabaseAdmin() {
 
   const broadcastNotification = useMutation({
     mutationFn: async (data: { title: string; message: string }) =>
-      fetch("/api/admin/notifications/broadcast", {
+      adminFetch("/api/admin/notifications/broadcast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -573,7 +602,7 @@ export function DatabaseAdmin() {
       const user = userStr ? JSON.parse(userStr) : null;
       const adminId = user?.dbId || user?.id || user?.uid;
 
-      const res = await fetch(`/api/admin/withdrawals/${id}/process`, {
+      const res = await adminFetch(`/api/admin/withdrawals/${id}/process`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ adminId, action, txHash, note }),
@@ -606,7 +635,7 @@ export function DatabaseAdmin() {
 
   const toggleUserStatus = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) =>
-      fetch(`/api/admin/users/${userId}/toggle-status`, {
+      adminFetch(`/api/admin/users/${userId}/toggle-status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive }),
@@ -619,7 +648,7 @@ export function DatabaseAdmin() {
 
   const adjustBalance = useMutation({
     mutationFn: async (data: { userId: string; symbol: string; amount: number; type: string; reason: string }) =>
-      fetch(`/api/admin/users/${data.userId}/adjust-balance`, {
+      adminFetch(`/api/admin/users/${data.userId}/adjust-balance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -633,7 +662,7 @@ export function DatabaseAdmin() {
 
   const disable2FA = useMutation({
     mutationFn: async ({ userId }: { userId: string }) => {
-      const res = await fetch(`/api/admin/users/${userId}/disable-2fa`, {
+      const res = await adminFetch(`/api/admin/users/${userId}/disable-2fa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -652,7 +681,7 @@ export function DatabaseAdmin() {
 
   const terminateMiningPurchase = useMutation({
     mutationFn: async ({ purchaseId, reason }: { purchaseId: string; reason?: string }) => {
-      const res = await fetch(`/api/admin/mining-purchases/${purchaseId}/terminate`, {
+      const res = await adminFetch(`/api/admin/mining-purchases/${purchaseId}/terminate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason }),
@@ -691,7 +720,7 @@ export function DatabaseAdmin() {
 
   const addConfig = useMutation({
     mutationFn: async (data: { key: string; value: string; category: string; description: string }) =>
-      fetch("/api/admin/config", {
+      adminFetch("/api/admin/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -707,7 +736,7 @@ export function DatabaseAdmin() {
 
   const updateConfig = useMutation({
     mutationFn: async ({ id, value }: { id: string; value: string }) =>
-      fetch(`/api/admin/config/${id}`, {
+      adminFetch(`/api/admin/config/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value }),
@@ -721,7 +750,7 @@ export function DatabaseAdmin() {
 
   const deleteConfig = useMutation({
     mutationFn: async (id: string) =>
-      fetch(`/api/admin/config/${id}`, { method: "DELETE" }).then(r => r.json()),
+      adminFetch(`/api/admin/config/${id}`, { method: "DELETE" }).then(r => r.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/config"] });
       toast({ title: "Configuration deleted" });
@@ -731,7 +760,7 @@ export function DatabaseAdmin() {
 
   const createArticle = useMutation({
     mutationFn: async (data: { title: string; description: string; category?: string; icon?: string; image?: string; order: number }) =>
-      fetch("/api/admin/articles", {
+      adminFetch("/api/admin/articles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, isActive: true }),
@@ -749,7 +778,7 @@ export function DatabaseAdmin() {
 
   const updateArticle = useMutation({
     mutationFn: async (data: { id: string; title: string; description: string; category?: string; icon?: string; image?: string; order: number }) =>
-      fetch(`/api/admin/articles/${data.id}`, {
+      adminFetch(`/api/admin/articles/${data.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -763,7 +792,7 @@ export function DatabaseAdmin() {
 
   const deleteArticle = useMutation({
     mutationFn: async (id: string) =>
-      fetch(`/api/admin/articles/${id}`, { method: "DELETE" }).then(r => r.json()),
+      adminFetch(`/api/admin/articles/${id}`, { method: "DELETE" }).then(r => r.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
       toast({ title: "Article deleted" });
@@ -1614,7 +1643,7 @@ export function DatabaseAdmin() {
                             variant={config.enabled ? "destructive" : "default"}
                             onClick={async () => {
                               try {
-                                await fetch(`/api/admin/auto-withdrawals/${config.id}/toggle`, {
+                                await adminFetch(`/api/admin/auto-withdrawals/${config.id}/toggle`, {
                                   method: "PATCH",
                                   headers: { "Content-Type": "application/json" },
                                   body: JSON.stringify({ enabled: !config.enabled })
@@ -2231,7 +2260,7 @@ export function DatabaseAdmin() {
                         className={stripeSettings?.isEnabled ? "bg-green-600 hover:bg-green-700" : ""}
                         onClick={async () => {
                           try {
-                            const res = await fetch("/api/admin/stripe/toggle", {
+                            const res = await adminFetch("/api/admin/stripe/toggle", {
                               method: "PATCH",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({ isEnabled: !stripeSettings?.isEnabled }),
@@ -2272,7 +2301,7 @@ export function DatabaseAdmin() {
                           size="sm"
                           variant={stripeSettings?.mode === "test" || !stripeSettings?.mode ? "default" : "outline"}
                           onClick={async () => {
-                            const res = await fetch("/api/admin/stripe/mode", {
+                            const res = await adminFetch("/api/admin/stripe/mode", {
                               method: "PATCH",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({ mode: "test" }),
@@ -2291,7 +2320,7 @@ export function DatabaseAdmin() {
                           variant={stripeSettings?.mode === "live" ? "default" : "outline"}
                           className={stripeSettings?.mode === "live" ? "bg-green-600 hover:bg-green-700" : ""}
                           onClick={async () => {
-                            const res = await fetch("/api/admin/stripe/mode", {
+                            const res = await adminFetch("/api/admin/stripe/mode", {
                               method: "PATCH",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({ mode: "live" }),
@@ -2317,7 +2346,7 @@ export function DatabaseAdmin() {
                       className="w-full"
                       onClick={async () => {
                         try {
-                          const res = await fetch("/api/admin/stripe/test", { method: "POST" });
+                          const res = await adminFetch("/api/admin/stripe/test", { method: "POST" });
                           const data = await res.json();
                           if (data.success) {
                             toast({ title: "Connection Successful!", description: data.message });
@@ -2460,7 +2489,7 @@ export function DatabaseAdmin() {
                       className="w-full"
                       onClick={async () => {
                         try {
-                          const res = await fetch("/api/admin/stripe/settings", {
+                          const res = await adminFetch("/api/admin/stripe/settings", {
                             method: "PUT",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
@@ -2568,7 +2597,7 @@ export function DatabaseAdmin() {
                                       variant="outline"
                                       onClick={async () => {
                                         try {
-                                          const res = await fetch(`/api/admin/stripe/refund/${payment.id}`, {
+                                          const res = await adminFetch(`/api/admin/stripe/refund/${payment.id}`, {
                                             method: "POST",
                                             headers: { "Content-Type": "application/json" },
                                             body: JSON.stringify({}),

@@ -7,9 +7,20 @@ import { verifyIdToken, setCustomClaims } from "./firebase-admin";
 import { HDWalletService } from "./services/hdWalletService";
 import * as stripeService from "./services/stripeService";
 
+// Admin API key for dashboard authentication (matches client-side admin password)
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY || "MiningClub2024!";
+
 // Middleware to verify admin authentication
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   try {
+    // Option 1: Check X-Admin-Key header (used by admin dashboard)
+    const adminKey = req.headers["x-admin-key"] as string;
+    if (adminKey && adminKey === ADMIN_API_KEY) {
+      (req as any).user = { admin: true, source: "api-key" };
+      return next();
+    }
+
+    // Option 2: Check Firebase Bearer token
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "No token provided" });
