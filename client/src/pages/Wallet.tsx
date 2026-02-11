@@ -858,7 +858,7 @@ export function Wallet({
                           <line x1="1" y1="10" x2="23" y2="10" strokeWidth="2"/>
                         </svg>
                         Pay ${parseFloat(cardDepositAmount).toFixed(2)}
-                        <img src={paymentMethodsImg} alt="Visa, Mastercard, Apple Pay, Google Pay" className="h-8 ml-2 inline-block object-contain" />
+                        <img src={paymentMethodsImg} alt="Visa, Mastercard, Apple Pay, Google Pay" className="h-5 ml-1.5 inline-block object-contain" />
                       </Button>
                     ) : (
                       <Button 

@@ -7,7 +7,7 @@ import paymentMethodsImg from "@assets/payment-methods.png";
 
 // Payment method logos (Visa, Mastercard, Apple Pay, Google Pay)
 const PaymentLogos = () => (
-  <img src={paymentMethodsImg} alt="Visa, Mastercard, Apple Pay, Google Pay" className="h-8 ml-2 inline-block object-contain" />
+  <img src={paymentMethodsImg} alt="Visa, Mastercard, Apple Pay, Google Pay" className="h-5 ml-1.5 inline-block object-contain" />
 );
 
 interface StripePayButtonProps {
