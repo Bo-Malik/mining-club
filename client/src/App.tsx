@@ -309,7 +309,7 @@ function MobileApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden safe-area-inset" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 15px)' }}>
+    <div className="min-h-screen bg-background overflow-x-hidden safe-area-inset" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 22px)' }}>
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] bg-primary/10 rounded-full blur-[120px]" />
