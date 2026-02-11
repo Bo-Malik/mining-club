@@ -4,7 +4,7 @@
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # ── Stage 2: Build client (Vite) + server (esbuild) ────────────────────
 FROM deps AS builder
