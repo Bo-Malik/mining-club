@@ -36,6 +36,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useBTCPrice } from "@/hooks/useBTCPrice";
 import { useCryptoPrices, CryptoType } from "@/hooks/useCryptoPrices";
@@ -94,7 +102,7 @@ const miningPackages: MiningPackage[] = [
     duration: 0, // One-time
     returnPercent: 125,
     dailyReturnBTC: 0.00000630,
-    paybackMonths: 9,
+    paybackMonths: 13,
     efficiency: "15W/TH",
     image: btcProImg,
   },
@@ -109,7 +117,7 @@ const miningPackages: MiningPackage[] = [
     duration: 0, // One-time
     returnPercent: 145,
     dailyReturnBTC: 0.00001470,
-    paybackMonths: 8,
+    paybackMonths: 11,
     efficiency: "15W/TH",
     image: btcMineImg,
     popular: true,
@@ -124,8 +132,8 @@ const miningPackages: MiningPackage[] = [
     hashrateUnit: "TH/s",
     duration: 0, // One-time
     returnPercent: 155,
-    dailyReturnBTC: 0.00003150,
-    paybackMonths: 7,
+    dailyReturnBTC: 0.00003800,
+    paybackMonths: 10,
     efficiency: "15W/TH",
     image: btcPremiumPlusImg,
   },
@@ -526,7 +534,7 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
             <p className="text-sm font-bold text-foreground">{pkg.hashrate}</p>
           </div>
           <div className="text-center border-x border-white/10">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Daily Earn</p>
+            <p className="text-[10px] text-muted-foreground mb-0.5">Daily <span className="text-amber-400">₿</span></p>
             <p className="text-sm font-bold text-emerald-400">{getSymbol()}{convert(dailyReturnUSD).toFixed(2)}</p>
           </div>
           <div className="text-center">
@@ -535,13 +543,13 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
           </div>
         </div>
         
-        {/* Duration badge */}
+        {/* Duration badge with payback hint */}
         <div className="flex items-center justify-between mb-3">
           <Badge className="text-[10px] bg-green-500/15 text-green-400 border-green-500/20">
             5 YEAR CONTRACT
           </Badge>
-          <span className="text-[10px] text-muted-foreground">
-            Payback ~{pkg.paybackMonths} months
+          <span className="text-[10px] text-muted-foreground" title="At current BTC price. Faster if BTC rises!">
+            ~{pkg.paybackMonths}mo payback*
           </span>
         </div>
 
@@ -559,10 +567,7 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
                 metadata={{ hashrate: pkg.hashrateValue, hashrateUnit: pkg.hashrateUnit, crypto: pkg.crypto }}
                 size="sm"
                 variant="default"
-                className={`w-full h-11 font-semibold text-white border-0 shadow-lg ${isBTC 
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-amber-500/25" 
-                  : "bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-500/25"
-                }`}
+                className="w-full h-11 font-semibold text-white border-0 shadow-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/25"
                 onPaymentSuccess={() => {
                   window.location.reload();
                 }}
@@ -570,43 +575,24 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
             </div>
           )}
           
-          {/* Secondary - Crypto/Wallet Payment */}
-          <motion.button
+          {/* Secondary - Crypto/Wallet Payment with static icons */}
+          <button
             onClick={() => onPurchase(pkg)}
             disabled={isPending}
-            className="relative w-14 h-11 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30 hover:border-violet-500/50 flex items-center justify-center overflow-hidden group transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="relative w-14 h-11 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center gap-0.5 transition-all hover:scale-105 active:scale-95"
             data-testid={`button-buy-${pkg.id}`}
             title="Pay with crypto balance"
           >
-            {/* Animated crypto icons */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <motion.div
-                className="absolute"
-                animate={{ 
-                  y: [-12, 12, -12],
-                  opacity: [1, 0.3, 1],
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <span className="text-amber-400 font-bold text-sm">₿</span>
-              </motion.div>
-              <motion.div
-                className="absolute"
-                animate={{ 
-                  y: [12, -12, 12],
-                  opacity: [0.3, 1, 0.3],
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <span className="text-emerald-400 font-bold text-xs">$</span>
-              </motion.div>
-            </div>
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-t from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </motion.button>
+            <span className="text-amber-400 font-bold text-sm">₿</span>
+            <span className="text-[8px] text-muted-foreground">/</span>
+            <span className="text-emerald-400 font-bold text-[10px]">$</span>
+          </button>
         </div>
+        
+        {/* Payback note */}
+        <p className="text-[9px] text-muted-foreground text-center mt-2 opacity-70">
+          *Payback at current price. Could be faster if BTC rises.
+        </p>
       </GlassCard>
     </motion.div>
   );
@@ -692,7 +678,7 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
           </div>
           
           {/* Quick buy section right after slider */}
-          <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+          <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
             <div className="flex items-center justify-between mb-2">
               <div>
                 <p className="text-xs text-muted-foreground">Total Cost</p>
@@ -701,7 +687,7 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">Daily Return</p>
+                <p className="text-xs text-muted-foreground">Daily <span className="text-amber-400">₿</span></p>
                 <p className="text-sm font-bold text-emerald-400">
                   +{getSymbol()}{convert(dailyUSDReturn).toFixed(2)}
                 </p>
@@ -719,12 +705,12 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
                     productName={`Custom BTC Mining ${btcHashrate} TH/s`}
                     metadata={{ hashrate: btcHashrate, hashrateUnit: "TH/s", crypto: "BTC" }}
                     variant="default"
-                    className="w-full h-10 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-0 shadow-lg shadow-amber-500/25"
+                    className="w-full h-10 font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 border-0 shadow-lg shadow-emerald-500/25"
                     onPaymentSuccess={() => window.location.reload()}
                   />
                 </div>
               )}
-              <motion.button
+              <button
                 onClick={() => {
                   onPurchase({
                     hashrate: btcHashrate,
@@ -734,18 +720,13 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
                   });
                 }}
                 disabled={isPending}
-                className="w-12 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30 hover:border-violet-500/50 flex items-center justify-center overflow-hidden group transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="w-12 h-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center gap-0.5 transition-all hover:scale-105 active:scale-95"
                 title="Pay with crypto balance"
               >
-                <motion.div
-                  animate={{ y: [-8, 8, -8], opacity: [1, 0.4, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  <span className="text-amber-400 font-bold text-sm">₿</span>
-                </motion.div>
-              </motion.button>
+                <span className="text-amber-400 font-bold text-sm">₿</span>
+                <span className="text-[8px] text-muted-foreground">/</span>
+                <span className="text-emerald-400 font-bold text-[10px]">$</span>
+              </button>
             </div>
           </div>
         </div>
@@ -867,8 +848,10 @@ function EmptyState({ onNavigateToInvest }: { onNavigateToInvest: () => void }) 
 const paymentCurrencies: CryptoType[] = ["USDT", "BTC", "LTC", "ETH"];
 
 export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }: MiningProps) {
-  const [activeTab, setActiveTab] = useState<"devices" | "hot">("devices");
+  const [activeTab, setActiveTab] = useState<"devices" | "hot">("hot");
   const [paymentCurrency, setPaymentCurrency] = useState<CryptoType>("USDT");
+  const [cryptoConfirmOpen, setCryptoConfirmOpen] = useState(false);
+  const [pendingPurchase, setPendingPurchase] = useState<MiningPackage | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const user = getCurrentUser();
@@ -971,8 +954,8 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
     return usdAmount / price;
   };
   
-  // Handle package purchase
-  const handlePackagePurchase = (pkg: MiningPackage) => {
+  // Show crypto payment confirmation popup
+  const showCryptoConfirmation = (pkg: MiningPackage) => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -998,12 +981,21 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
       const amountNeeded = costInCrypto - availableBalance;
       toast({
         title: "Deposit Required",
-        description: `You need to deposit ${amountNeeded.toFixed(paymentCurrency === "USDT" ? 2 : 6)} ${paymentCurrency} to buy this contract. Total cost: ${costInCrypto.toFixed(paymentCurrency === "USDT" ? 2 : 6)} ${paymentCurrency}`,
+        description: `You need ${amountNeeded.toFixed(paymentCurrency === "USDT" ? 2 : 6)} more ${paymentCurrency}. Total: ${costInCrypto.toFixed(paymentCurrency === "USDT" ? 2 : 6)} ${paymentCurrency}`,
         variant: "destructive",
       });
       return;
     }
 
+    // Show confirmation popup
+    setPendingPurchase(pkg);
+    setCryptoConfirmOpen(true);
+  };
+  
+  // Execute the actual crypto purchase after confirmation
+  const handlePackagePurchase = (pkg: MiningPackage) => {
+    const costInCrypto = convertUSDToCrypto(pkg.cost, paymentCurrency);
+    
     const purchasePayload = {
       userId: dbUserId,
       packageName: pkg.name,
@@ -1019,6 +1011,8 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
     };
     
     createPurchase.mutate(purchasePayload);
+    setCryptoConfirmOpen(false);
+    setPendingPurchase(null);
   };
 
   // Handle custom hashpower purchase
@@ -1157,53 +1151,47 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
             </div>
           </div>
           
-          {/* My Devices Quick Jump - Only show if user has active contracts */}
-          {(contracts.length + activePurchases.length > 0) && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              onClick={scrollToMyDevices}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 hover:border-emerald-500/40 transition-all group"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                  <Cpu className="w-4 h-4 text-emerald-400" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-foreground">My Active Devices</p>
-                  <p className="text-xs text-muted-foreground">{contracts.length + activePurchases.length} mining • {totalHashrate.toFixed(1)} TH/s</p>
-                </div>
-              </div>
-              <ChevronDown className="w-5 h-5 text-emerald-400 group-hover:translate-y-1 transition-transform" />
-            </motion.button>
-          )}
         </motion.div>
 
-        {/* Quick Stats - Only show if has active purchases */}
+        {/* Quick Stats with My Devices button integrated - Only show if has active purchases */}
         {(contracts.length + activePurchases.length > 0) && (
           <GlassCard delay={0.1} variant="strong" className="relative overflow-hidden py-4 px-4" glow="btc">
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-amber-500/15 via-orange-500/8 to-transparent blur-2xl" />
+              <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-emerald-500/15 via-teal-500/8 to-transparent blur-2xl" />
             </div>
             <FloatingParticles />
-            <div className="relative z-10 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Your Hashpower</p>
-                <AnimatedHashrateDisplay value={totalHashrate} unit="TH/s" />
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground mb-0.5">Today's Earnings</p>
-                <div className="flex items-baseline gap-1 justify-end">
-                  <span className="text-sm text-muted-foreground">$</span>
-                  <LiveGrowingBalance
-                    value={miningEstimatedTodayUSDT}
-                    perSecond={miningEarningsPerSecondUSDT}
-                    active={miningEarningsPerSecondUSDT > 0}
-                    decimals={2}
-                    className="text-xl font-bold text-emerald-400"
-                  />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-4 mb-3">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">Your Hashpower</p>
+                  <AnimatedHashrateDisplay value={totalHashrate} unit="TH/s" />
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground mb-0.5">Today's Earnings</p>
+                  <div className="flex items-baseline gap-1 justify-end">
+                    <span className="text-sm text-muted-foreground">$</span>
+                    <LiveGrowingBalance
+                      value={miningEstimatedTodayUSDT}
+                      perSecond={miningEarningsPerSecondUSDT}
+                      active={miningEarningsPerSecondUSDT > 0}
+                      decimals={2}
+                      className="text-xl font-bold text-emerald-400"
+                    />
+                  </div>
                 </div>
               </div>
+              
+              {/* My Devices button integrated */}
+              <button
+                onClick={scrollToMyDevices}
+                className="w-full flex items-center justify-between p-2 rounded-lg bg-white/5 border border-emerald-500/20 hover:border-emerald-500/40 transition-all group"
+              >
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-medium text-foreground">View {contracts.length + activePurchases.length} Active Devices</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-emerald-400 group-hover:translate-y-0.5 transition-transform" />
+              </button>
             </div>
           </GlassCard>
         )}
@@ -1215,8 +1203,20 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
             <h2 className="text-base font-semibold text-foreground">Choose Mining Type</h2>
           </div>
           
-          {/* Main Tabs */}
+          {/* Main Tabs - Custom first */}
           <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab("hot")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all ${
+                activeTab === "hot"
+                  ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
+                  : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
+              }`}
+            >
+              <Calculator className="w-5 h-5" />
+              <span>Custom TH/s</span>
+              <span className="text-[9px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full uppercase">HOT</span>
+            </button>
             <button
               onClick={() => setActiveTab("devices")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all ${
@@ -1226,56 +1226,15 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
               }`}
             >
               <Cpu className="w-5 h-5" />
-              <span>Ready Packages</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("hot")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all ${
-                activeTab === "hot"
-                  ? "bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 border-2 border-red-500/40 shadow-lg shadow-red-500/10"
-                  : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
-              }`}
-            >
-              <Flame className="w-5 h-5" />
-              <span>Custom</span>
-              <span className="text-[9px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full uppercase">HOT</span>
+              <span>Packages</span>
             </button>
           </div>
         </div>
 
-        {/* Step 2: Payment Method */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">2</div>
-            <h2 className="text-base font-semibold text-foreground">Select Payment</h2>
-          </div>
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-            <div className="flex items-center gap-2 flex-1">
-              <Wallet className="w-4 h-4 text-muted-foreground" />
-              <Select value={paymentCurrency} onValueChange={(v) => setPaymentCurrency(v as CryptoType)}>
-                <SelectTrigger className="h-9 flex-1 text-sm bg-white/5 border-white/10 font-medium">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {paymentCurrencies.map((c) => (
-                    <SelectItem key={c} value={c} className="text-sm">{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Balance</p>
-              <p className="text-sm font-bold text-foreground">
-                {paymentCurrency === "USDT" ? "$" : ""}{availableBalance.toFixed(paymentCurrency === "USDT" ? 2 : 6)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Step 3: Select Package */}
+        {/* Step 2: Select Package */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">3</div>
+            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">2</div>
             <h2 className="text-base font-semibold text-foreground">
               {activeTab === "devices" ? "Select Package" : "Configure Hashrate"}
             </h2>
@@ -1293,7 +1252,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
                 className="space-y-3"
               >
                 {btcPackages.map((pkg, index) => (
-                  <PackageCard key={pkg.id} pkg={pkg} index={index} onPurchase={handlePackagePurchase} isPending={createPurchase.isPending} userId={dbUserId} />
+                  <PackageCard key={pkg.id} pkg={pkg} index={index} onPurchase={showCryptoConfirmation} isPending={createPurchase.isPending} userId={dbUserId} />
                 ))}
 
                 {/* Trust Indicators - Compact */}
@@ -1380,6 +1339,71 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
           </div>
         </motion.div>
       </motion.div>
+
+      {/* Crypto Payment Confirmation Dialog */}
+      <Dialog open={cryptoConfirmOpen} onOpenChange={setCryptoConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <span className="text-amber-400 font-bold">₿</span>
+              </div>
+              Confirm Crypto Payment
+            </DialogTitle>
+            <DialogDescription>
+              You're about to purchase with your wallet balance
+            </DialogDescription>
+          </DialogHeader>
+          
+          {pendingPurchase && (
+            <div className="space-y-3 py-2">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-foreground">{pendingPurchase.crypto} {pendingPurchase.name}</span>
+                  <span className="text-xs text-muted-foreground">{pendingPurchase.hashrate}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Payment Amount</span>
+                  <span className="text-base font-bold text-amber-400">
+                    {convertUSDToCrypto(pendingPurchase.cost, paymentCurrency).toFixed(paymentCurrency === "USDT" ? 2 : 6)} {paymentCurrency}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <span className="text-xs text-muted-foreground">Your Balance</span>
+                <span className="text-sm font-semibold text-emerald-400">
+                  {availableBalance.toFixed(paymentCurrency === "USDT" ? 2 : 6)} {paymentCurrency}
+                </span>
+              </div>
+              
+              <p className="text-[10px] text-muted-foreground text-center">
+                This will deduct from your {paymentCurrency} wallet balance
+              </p>
+            </div>
+          )}
+          
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCryptoConfirmOpen(false);
+                setPendingPurchase(null);
+              }}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => pendingPurchase && handlePackagePurchase(pendingPurchase)}
+              disabled={createPurchase.isPending}
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0"
+            >
+              {createPurchase.isPending ? "Processing..." : "Confirm Purchase"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
