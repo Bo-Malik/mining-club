@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { auth } from "@/lib/firebase";
@@ -179,6 +180,8 @@ export function Wallet({
   const [depositAmount, setDepositAmount] = useState("");
   const [depositSubmitted, setDepositSubmitted] = useState(false);
   const [showDepositQR, setShowDepositQR] = useState(false);
+  const [depositMethod, setDepositMethod] = useState<"card" | "crypto">("card");
+  const [cardDepositAmount, setCardDepositAmount] = useState("");
 
   const queryClient = useQueryClient();
 
@@ -454,6 +457,8 @@ export function Wallet({
     setDepositAmount("");
     setDepositSubmitted(false);
     setShowDepositQR(false);
+    setDepositMethod("card");
+    setCardDepositAmount("");
     setDepositOpen(true);
   };
 
@@ -731,10 +736,10 @@ export function Wallet({
             <div>
               <DialogTitle className="flex items-center gap-2 text-base font-semibold">
                 <ArrowDownToLine className="w-5 h-5 text-emerald-400" />
-                Deposit Crypto
+                Deposit Funds
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-1">
-                Select cryptocurrency and network to receive funds
+                Choose your preferred payment method
               </DialogDescription>
             </div>
             <Button
@@ -747,170 +752,270 @@ export function Wallet({
             </Button>
           </div>
           
-          <div className="p-4 pt-3 space-y-3">
-            {/* Crypto Selection */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="deposit-crypto" className="text-xs">Cryptocurrency</Label>
-                <Select
-                  value={selectedCrypto}
-                  onValueChange={(value) => handleCryptoChange(value as CryptoType)}
-                >
-                  <SelectTrigger id="deposit-crypto" className="h-9 text-xs" data-testid="select-deposit-crypto">
-                    <SelectValue placeholder="Select crypto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(["USDT", "BTC", "ETH", "LTC"] as CryptoType[]).map((crypto) => (
-                      <SelectItem key={crypto} value={crypto} data-testid={`option-deposit-crypto-${crypto.toLowerCase()}`}>
-                        <div className="flex items-center gap-2">
-                          <CryptoIcon crypto={crypto} className="w-4 h-4" />
-                          <span>{crypto}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="p-4 pt-3">
+            <Tabs value={depositMethod} onValueChange={(v) => setDepositMethod(v as "card" | "crypto")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="card" className="text-xs">
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" strokeWidth="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10" strokeWidth="2"/>
+                  </svg>
+                  Card Payment
+                </TabsTrigger>
+                <TabsTrigger value="crypto" className="text-xs">
+                  <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/>
+                  </svg>
+                  Crypto Deposit
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* Card Payment Tab */}
+              <TabsContent value="card" className="space-y-4 mt-0">
+                {!depositSubmitted ? (
+                  <>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="card-deposit-amount" className="text-xs">Deposit Amount (USD)</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <Input
+                          id="card-deposit-amount"
+                          type="number"
+                          min="20"
+                          step="1"
+                          placeholder="Enter amount"
+                          value={cardDepositAmount}
+                          onChange={(e) => setCardDepositAmount(e.target.value)}
+                          className="h-12 text-lg pl-7"
+                          data-testid="input-card-deposit-amount"
+                        />
+                      </div>
+                    </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="deposit-network" className="text-xs">Network</Label>
-                <Select value={selectedNetwork} onValueChange={handleNetworkChange}>
-                  <SelectTrigger id="deposit-network" className="h-9 text-xs" data-testid="select-deposit-network">
-                    <SelectValue placeholder="Select network" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cryptoNetworks[selectedCrypto]?.map((network) => (
-                      <SelectItem key={network.id} value={network.id} data-testid={`option-deposit-network-${network.id}`}>
-                        {network.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                    {/* Quick Amount Buttons */}
+                    <div className="grid grid-cols-4 gap-2">
+                      {[50, 100, 250, 500].map((amount) => (
+                        <Button
+                          key={amount}
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "h-9 text-xs border-white/10",
+                            cardDepositAmount === String(amount) && "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                          )}
+                          onClick={() => setCardDepositAmount(String(amount))}
+                        >
+                          ${amount}
+                        </Button>
+                      ))}
+                    </div>
 
-            {/* Deposit Address */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Your Deposit Address</Label>
-              <div className="rounded-xl p-3 border border-white/10 bg-white/5">
-                <p className="text-xs font-mono break-all text-foreground mb-2" data-testid="text-deposit-address">
-                  {depositAddress || "Select network to generate address"}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="flex-1 h-8 text-xs"
-                    onClick={copyAddress}
-                    disabled={!depositAddress}
-                    data-testid="button-copy-address"
-                  >
-                    {copied ? <><Check className="w-3 h-3 mr-1.5 text-emerald-400" />Copied!</> : <><Copy className="w-3 h-3 mr-1.5" />Copy</>}
-                  </Button>
-                  {depositAddress && depositAddress !== "Select network to generate address" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs border-white/10"
-                      onClick={() => setShowDepositQR(!showDepositQR)}
+                    {/* Info Row */}
+                    <div className="flex items-center justify-between text-xs py-2 px-3 rounded-lg bg-white/5">
+                      <span className="text-muted-foreground">Min Deposit</span>
+                      <span className="text-emerald-400 font-medium">$20.00</span>
+                    </div>
+
+                    {/* Pay Button */}
+                    {userId && cardDepositAmount && parseFloat(cardDepositAmount) >= 20 ? (
+                      <StripePayButton
+                        userId={userId}
+                        amount={parseFloat(cardDepositAmount)}
+                        productType="wallet_deposit"
+                        productName={`Wallet Deposit - $${parseFloat(cardDepositAmount).toFixed(2)}`}
+                        metadata={{ depositCurrency: "USD", paymentMethod: "card" }}
+                        className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-medium"
+                        onPaymentSuccess={() => {
+                          queryClient.invalidateQueries();
+                          setDepositSubmitted(true);
+                        }}
+                      />
+                    ) : (
+                      <Button 
+                        className="w-full h-12 bg-emerald-500/50 text-white font-medium" 
+                        disabled
+                      >
+                        {!cardDepositAmount ? "Enter amount to continue" : "Minimum deposit is $20"}
+                      </Button>
+                    )}
+
+                    {/* Security Info */}
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                      </svg>
+                      Secure payment powered by Stripe
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-emerald-400">Payment Successful!</p>
+                        <p className="text-xs text-muted-foreground">Balance updated instantly.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1 h-9" onClick={() => { setDepositSubmitted(false); setCardDepositAmount(""); }}>
+                        New Deposit
+                      </Button>
+                      <Button className="flex-1 h-9" onClick={() => setDepositOpen(false)}>
+                        Done
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+              
+              {/* Crypto Deposit Tab */}
+              <TabsContent value="crypto" className="space-y-3 mt-0">
+                {/* Crypto Selection */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="deposit-crypto" className="text-xs">Cryptocurrency</Label>
+                    <Select
+                      value={selectedCrypto}
+                      onValueChange={(value) => handleCryptoChange(value as CryptoType)}
                     >
-                      {showDepositQR ? "Hide QR" : "Show QR"}
-                    </Button>
-                  )}
-                </div>
-                {showDepositQR && depositAddress && depositAddress !== "Select network to generate address" && (
-                  <div className="flex justify-center mt-3 pt-3 border-t border-white/10">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(depositAddress)}&margin=6`}
-                      alt="Deposit QR Code"
-                      className="w-24 h-24 rounded-lg border border-white/20 bg-white p-1"
-                    />
+                      <SelectTrigger id="deposit-crypto" className="h-9 text-xs" data-testid="select-deposit-crypto">
+                        <SelectValue placeholder="Select crypto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(["USDT", "BTC", "ETH", "LTC"] as CryptoType[]).map((crypto) => (
+                          <SelectItem key={crypto} value={crypto} data-testid={`option-deposit-crypto-${crypto.toLowerCase()}`}>
+                            <div className="flex items-center gap-2">
+                              <CryptoIcon crypto={crypto} className="w-4 h-4" />
+                              <span>{crypto}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Info Row */}
-            <div className="flex items-center justify-between text-xs py-2 px-3 rounded-lg bg-white/5">
-              <span className="text-muted-foreground">Min Deposit</span>
-              <span className="text-emerald-400 font-medium">{getSymbol()}20.00</span>
-            </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="deposit-network" className="text-xs">Network</Label>
+                    <Select value={selectedNetwork} onValueChange={handleNetworkChange}>
+                      <SelectTrigger id="deposit-network" className="h-9 text-xs" data-testid="select-deposit-network">
+                        <SelectValue placeholder="Select network" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cryptoNetworks[selectedCrypto]?.map((network) => (
+                          <SelectItem key={network.id} value={network.id} data-testid={`option-deposit-network-${network.id}`}>
+                            {network.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-            {/* Warning */}
-            <div className="flex items-start gap-2 p-2.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
-              <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-amber-200/80 leading-tight">
-                Only send {selectedCrypto} via {cryptoNetworks[selectedCrypto]?.find(n => n.id === selectedNetwork)?.name || "selected network"}. Wrong network = lost funds.
-              </p>
-            </div>
-
-            {/* Amount Input */}
-            {!depositSubmitted ? (
-              <div className="space-y-3 pt-2 border-t border-white/10">
+                {/* Deposit Address */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="deposit-amount" className="text-xs">Amount Deposited</Label>
-                  <Input
-                    id="deposit-amount"
-                    type="number"
-                    step="any"
-                    placeholder={`Enter ${selectedCrypto} amount`}
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    className="h-10 text-sm"
-                    data-testid="input-deposit-amount"
-                  />
+                  <Label className="text-xs">Your Deposit Address</Label>
+                  <div className="rounded-xl p-3 border border-white/10 bg-white/5">
+                    <p className="text-xs font-mono break-all text-foreground mb-2" data-testid="text-deposit-address">
+                      {depositAddress || "Select network to generate address"}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 h-8 text-xs"
+                        onClick={copyAddress}
+                        disabled={!depositAddress}
+                        data-testid="button-copy-address"
+                      >
+                        {copied ? <><Check className="w-3 h-3 mr-1.5 text-emerald-400" />Copied!</> : <><Copy className="w-3 h-3 mr-1.5" />Copy</>}
+                      </Button>
+                      {depositAddress && depositAddress !== "Select network to generate address" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs border-white/10"
+                          onClick={() => setShowDepositQR(!showDepositQR)}
+                        >
+                          {showDepositQR ? "Hide QR" : "Show QR"}
+                        </Button>
+                      )}
+                    </div>
+                    {showDepositQR && depositAddress && depositAddress !== "Select network to generate address" && (
+                      <div className="flex justify-center mt-3 pt-3 border-t border-white/10">
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(depositAddress)}&margin=6`}
+                          alt="Deposit QR Code"
+                          className="w-24 h-24 rounded-lg border border-white/20 bg-white p-1"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <Button
-                  className="w-full h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-medium"
-                  onClick={handleSubmitDeposit}
-                  disabled={submitDepositMutation.isPending || !depositAmount || !depositAddress}
-                  data-testid="button-confirm-deposit"
-                >
-                  {submitDepositMutation.isPending ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Submitting...</>
-                  ) : (
-                    <><CheckCircle2 className="w-4 h-4 mr-2" />Confirm Deposit</>
-                  )}
-                </Button>
-                {/* Quick Card Deposit via Stripe */}
-                {userId && depositAmount && parseFloat(depositAmount) > 0 && (
-                  <div className="pt-2 border-t border-white/10">
-                    <p className="text-xs text-muted-foreground text-center mb-2">Or deposit instantly with card</p>
-                    <StripePayButton
-                      userId={userId}
-                      amount={parseFloat(depositAmount)}
-                      productType="wallet_deposit"
-                      productName={`Wallet Deposit - $${parseFloat(depositAmount).toFixed(2)}`}
-                      metadata={{ depositCurrency: selectedCrypto }}
-                      variant="outline"
-                      className="w-full h-10"
-                      onPaymentSuccess={() => {
-                        queryClient.invalidateQueries();
-                        setDepositSubmitted(true);
-                      }}
-                    />
+
+                {/* Info Row */}
+                <div className="flex items-center justify-between text-xs py-2 px-3 rounded-lg bg-white/5">
+                  <span className="text-muted-foreground">Min Deposit</span>
+                  <span className="text-emerald-400 font-medium">{getSymbol()}20.00</span>
+                </div>
+
+                {/* Warning */}
+                <div className="flex items-start gap-2 p-2.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
+                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-amber-200/80 leading-tight">
+                    Only send {selectedCrypto} via {cryptoNetworks[selectedCrypto]?.find(n => n.id === selectedNetwork)?.name || "selected network"}. Wrong network = lost funds.
+                  </p>
+                </div>
+
+                {/* Amount Input */}
+                {!depositSubmitted ? (
+                  <div className="space-y-3 pt-2 border-t border-white/10">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="deposit-amount" className="text-xs">Amount Deposited</Label>
+                      <Input
+                        id="deposit-amount"
+                        type="number"
+                        step="any"
+                        placeholder={`Enter ${selectedCrypto} amount`}
+                        value={depositAmount}
+                        onChange={(e) => setDepositAmount(e.target.value)}
+                        className="h-10 text-sm"
+                        data-testid="input-deposit-amount"
+                      />
+                    </div>
+                    <Button
+                      className="w-full h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-medium"
+                      onClick={handleSubmitDeposit}
+                      disabled={submitDepositMutation.isPending || !depositAmount || !depositAddress}
+                      data-testid="button-confirm-deposit"
+                    >
+                      {submitDepositMutation.isPending ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Submitting...</>
+                      ) : (
+                        <><CheckCircle2 className="w-4 h-4 mr-2" />Confirm Deposit</>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3 pt-2 border-t border-white/10">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-emerald-400">Deposit Submitted!</p>
+                        <p className="text-xs text-muted-foreground">Balance updated within 10-30 min.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1 h-9" onClick={() => { setDepositSubmitted(false); setDepositAmount(""); }}>
+                        New Deposit
+                      </Button>
+                      <Button className="flex-1 h-9" onClick={() => setDepositOpen(false)}>
+                        Done
+                      </Button>
+                    </div>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="space-y-3 pt-2 border-t border-white/10">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-emerald-400">Deposit Submitted!</p>
-                    <p className="text-xs text-muted-foreground">Balance updated within 10-30 min.</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1 h-9" onClick={() => { setDepositSubmitted(false); setDepositAmount(""); }}>
-                    New Deposit
-                  </Button>
-                  <Button className="flex-1 h-9" onClick={() => setDepositOpen(false)}>
-                    Done
-                  </Button>
-                </div>
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
           </div>
         </DialogContent>
       </Dialog>
