@@ -42,7 +42,6 @@ COPY --from=builder /app/attached_assets ./attached_assets
 
 # Cloud Run injects PORT (default 8080). The server reads process.env.PORT.
 EXPOSE 8080
-ENV PORT=8080
 
 # Use node directly (not npm) so SIGTERM reaches the process for graceful shutdown.
 CMD ["node", "dist/index.mjs"]
