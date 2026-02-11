@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useStripeConfig, createPaymentIntent } from "@/hooks/useStripe";
-import { CreditCard, CheckCircle2, XCircle, Loader2, X, ArrowLeft, ShieldCheck } from "lucide-react";
+import { CreditCard, CheckCircle2, XCircle, Loader2, ArrowLeft, ShieldCheck } from "lucide-react";
 
 let stripePromise: Promise<Stripe | null> | null = null;
 
@@ -89,17 +89,8 @@ function PaymentForm({ onSuccess, onError, onClose, amount, productName }: Payme
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm font-medium">Back</span>
         </button>
-        <div className="flex items-center gap-2">
-          <CreditCard className="w-5 h-5 text-primary" />
-          <span className="text-base font-semibold">Payment</span>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-2 rounded-full hover:bg-muted transition-colors -mr-2"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <span className="text-base font-semibold">Payment</span>
+        <div className="w-16" />
       </div>
 
       {/* Content */}
@@ -277,7 +268,7 @@ export function StripePaymentScreen({
 
   const content = (
     <div 
-      className="fixed inset-0 z-[9999] bg-background flex flex-col"
+      className="fixed inset-0 z-[9999] flex flex-col bg-background"
       style={{
         position: 'fixed',
         top: 0,
@@ -286,6 +277,8 @@ export function StripePaymentScreen({
         bottom: 0,
       }}
     >
+      {/* Content wrapper */}
+      <div className="flex flex-col flex-1">
       {paymentStatus === "loading" && (
         <>
           {/* Header for loading state */}
@@ -300,16 +293,8 @@ export function StripePaymentScreen({
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm font-medium">Back</span>
             </button>
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-primary" />
-              <span className="text-base font-semibold">Payment</span>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-muted transition-colors -mr-2"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <span className="text-base font-semibold">Payment</span>
+            <div className="w-16" />
           </div>
           <div className="flex-1 flex flex-col items-center justify-center">
             <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
@@ -360,12 +345,7 @@ export function StripePaymentScreen({
               <XCircle className="w-5 h-5 text-red-500" />
               <span className="text-base font-semibold">Error</span>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-muted transition-colors -mr-2"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="w-16" />
           </div>
           <div className="flex-1 flex flex-col items-center justify-center p-6">
             <div className="w-24 h-24 rounded-full bg-red-500/20 flex items-center justify-center mb-6">
@@ -441,18 +421,14 @@ export function StripePaymentScreen({
               <span className="text-sm font-medium">Back</span>
             </button>
             <span className="text-base font-semibold">Payment</span>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-muted transition-colors -mr-2"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="w-16" />
           </div>
           <div className="flex-1 flex items-center justify-center">
             <p className="text-muted-foreground">Stripe is not configured.</p>
           </div>
         </>
       )}
+      </div>
     </div>
   );
 

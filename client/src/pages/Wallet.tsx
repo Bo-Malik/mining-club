@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { auth } from "@/lib/firebase";
 import { StripePayButton } from "@/components/StripePayButton";
+import { useStripeConfig } from "@/hooks/useStripe";
 import type { WalletBalance, Transaction } from "@/lib/types";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
 import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
@@ -212,6 +213,9 @@ export function Wallet({
   const userStr = typeof localStorage !== 'undefined' ? localStorage.getItem("user") : null;
   const user = userStr ? JSON.parse(userStr) : null;
   const userId = user?.dbId || user?.id || user?.uid;
+
+  // Get Stripe config to check if card payments are enabled
+  const { data: stripeConfig, isLoading: stripeLoading } = useStripeConfig();
   
   console.log("Wallet user check:", { userStr: !!userStr, user: !!user, userId });
 
@@ -772,7 +776,28 @@ export function Wallet({
               
               {/* Card Payment Tab */}
               <TabsContent value="card" className="space-y-4 mt-0">
-                {!depositSubmitted ? (
+                {stripeLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : !stripeConfig?.enabled ? (
+                  <div className="text-center py-6 space-y-3">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center">
+                      <AlertCircle className="w-6 h-6 text-amber-500" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Card payments are not currently available.<br/>
+                      Please use crypto deposit instead.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setDepositMethod("crypto")}
+                    >
+                      Go to Crypto Deposit
+                    </Button>
+                  </div>
+                ) : !depositSubmitted ? (
                   <>
                     <div className="space-y-1.5">
                       <Label htmlFor="card-deposit-amount" className="text-xs">Deposit Amount (USD)</Label>
