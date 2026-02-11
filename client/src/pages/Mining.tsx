@@ -42,7 +42,7 @@ import type { ChartDataPoint, MiningContract, PoolStatus } from "@/lib/types";
 
 import btcMineImg from "@assets/Bitcoin_Mine_1766014388617.webp";
 import ltcMineImg from "@assets/Gemini_Generated_Image_1ri2av1ri2av1ri2_(1)_1766014388604.webp";
-import btcMiningCart from "@assets/asic-miner-hardware-3d-icon-png-download-11211351.webp";
+import btcProImg from "@assets/Bitcoin Depository.png";
 import btcPremiumPlusImg from "@assets/PremiumPlus.png";
 import ltcMiningCart from "@assets/Gemini_Generated_Image_46ieyx46ieyx46ie_(1)_1766014388603.webp";
 
@@ -93,7 +93,7 @@ const miningPackages: MiningPackage[] = [
     dailyReturnBTC: 0.00000630,
     paybackMonths: 9,
     efficiency: "15W/TH",
-    image: btcMiningCart,
+    image: btcProImg,
   },
   {
     id: "btc-premium",
