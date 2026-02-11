@@ -33,4 +33,7 @@ steps:
       - --set-secrets
       - DATABASE_URL_POOLER=neon_database_url:latest,DATABASE_URL=neon_database_url:latest,FIREBASE_SERVICE_ACCOUNT=firebase_service_account_json:latest
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 timeout: 1800s
