@@ -618,15 +618,12 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
         </div>
         <div>
           <h2 className="text-base font-semibold text-foreground">Custom Hashrate Calculator</h2>
-          <p className="text-xs text-muted-foreground">Build your own 5-year mining package</p>
+          <p className="text-xs text-muted-foreground">Build your own mining package</p>
         </div>
       </div>
       
       <div className="space-y-4">
-        <div className="mb-4 space-y-2">
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-            5 YEAR CONTRACT
-          </Badge>
+        <div className="mb-4">
           <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
             VALID FOR 7 YEARS
           </Badge>
@@ -772,7 +769,7 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
         )}
         
         <p className="text-center text-[10px] text-muted-foreground">
-          5 Year Contract • All rewards paid in BTC
+          All rewards paid in BTC
         </p>
       </div>
     </GlassCard>
