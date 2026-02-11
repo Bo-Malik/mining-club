@@ -347,6 +347,7 @@ function ActiveMiningPurchases({
   btcPrice: number;
 }) {
   const { convert, getSymbol } = useCurrency();
+  const [showAll, setShowAll] = useState(false);
   
   if (!purchases || purchases.length === 0) return null;
 
@@ -356,6 +357,10 @@ function ActiveMiningPurchases({
   );
   
   if (activePurchases.length === 0) return null;
+
+  // Show only first 2 unless expanded
+  const displayedPurchases = showAll ? activePurchases : activePurchases.slice(0, 2);
+  const hiddenCount = activePurchases.length - 2;
 
   return (
     <motion.div
@@ -377,7 +382,7 @@ function ActiveMiningPurchases({
         </div>
 
         <div className="space-y-3">
-          {activePurchases.map((purchase) => {
+          {displayedPurchases.map((purchase) => {
             const dailyUSD = purchase.dailyReturnBTC * btcPrice;
             const totalEarnedUSD = purchase.totalEarned * btcPrice;
             const displayedDailyBTC = purchase.dailyReturnBTC;
@@ -436,6 +441,16 @@ function ActiveMiningPurchases({
               </motion.div>
             );
           })}
+          
+          {/* Show more/less button */}
+          {hiddenCount > 0 && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="w-full py-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              {showAll ? "Show less" : `Show ${hiddenCount} more`}
+            </button>
+          )}
         </div>
       </GlassCard>
     </motion.div>
