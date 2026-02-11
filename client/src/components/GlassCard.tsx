@@ -34,14 +34,14 @@ export function GlassCard({
         glowClass,
         className
       )}
+      style={topFade ? {
+        maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,0.7) 30%, black 50%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,0.7) 30%, black 50%)'
+      } : undefined}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      {/* Top fade overlay for transparent top effect */}
-      {topFade && (
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background/60 to-transparent pointer-events-none z-[1] rounded-t-2xl" />
-      )}
       <div className="relative z-10">
         {children}
       </div>

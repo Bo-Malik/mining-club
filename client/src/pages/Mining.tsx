@@ -1201,7 +1201,6 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="space-y-3"
         >
           <div className="flex items-center gap-3">
             <button
@@ -1211,24 +1210,20 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
             >
               <ChevronLeft className="w-5 h-5 text-muted-foreground" />
             </button>
-            <div className="flex-1 text-center pr-10">
+            <div className="flex-1 text-center">
               <h1 className="text-xl font-bold text-foreground">Mining</h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Buy hashpower & earn crypto
               </p>
             </div>
-          </div>
-          
-          {/* Balance indicator */}
-          <div className="flex justify-end">
-            <div className="text-right px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-              <p className="text-[10px] text-muted-foreground">Available</p>
-              <p className="text-sm font-bold text-foreground">
-                {paymentCurrency === "USDT" ? "$" : ""}{availableBalance.toFixed(paymentCurrency === "USDT" ? 2 : 6)} {paymentCurrency}
+            {/* Balance indicator - compact */}
+            <div className="text-right">
+              <p className="text-[9px] text-muted-foreground">Available</p>
+              <p className="text-xs font-bold text-foreground">
+                {paymentCurrency === "USDT" ? "$" : ""}{availableBalance.toFixed(paymentCurrency === "USDT" ? 2 : 6)}
               </p>
             </div>
           </div>
-          
         </motion.div>
 
         {/* Quick Stats with My Devices button integrated - Only show if has active purchases */}
