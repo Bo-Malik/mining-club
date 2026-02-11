@@ -31,7 +31,9 @@ import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { auth } from "@/lib/firebase";
 import { StripePayButton } from "@/components/StripePayButton";
+import { StripePaymentModal } from "@/components/StripePaymentScreen";
 import { useStripeConfig } from "@/hooks/useStripe";
+import paymentMethodsImg from "@assets/payment-methods.png";
 import type { WalletBalance, Transaction } from "@/lib/types";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
 import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
@@ -183,6 +185,7 @@ export function Wallet({
   const [showDepositQR, setShowDepositQR] = useState(false);
   const [depositMethod, setDepositMethod] = useState<"card" | "crypto">("card");
   const [cardDepositAmount, setCardDepositAmount] = useState("");
+  const [showStripePayment, setShowStripePayment] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -843,19 +846,20 @@ export function Wallet({
 
                     {/* Pay Button */}
                     {userId && cardDepositAmount && parseFloat(cardDepositAmount) >= 20 ? (
-                      <StripePayButton
-                        userId={userId}
-                        amount={parseFloat(cardDepositAmount)}
-                        productType="wallet_deposit"
-                        productName={`Wallet Deposit - $${parseFloat(cardDepositAmount).toFixed(2)}`}
-                        metadata={{ depositCurrency: "USD", paymentMethod: "card" }}
+                      <Button
                         className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-medium"
-                        onPaymentStart={() => setDepositOpen(false)}
-                        onPaymentSuccess={() => {
-                          queryClient.invalidateQueries();
-                          setDepositSubmitted(true);
+                        onClick={() => {
+                          setDepositOpen(false);
+                          setShowStripePayment(true);
                         }}
-                      />
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2" strokeWidth="2"/>
+                          <line x1="1" y1="10" x2="23" y2="10" strokeWidth="2"/>
+                        </svg>
+                        Pay ${parseFloat(cardDepositAmount).toFixed(2)}
+                        <img src={paymentMethodsImg} alt="Visa, Mastercard, Apple Pay, Google Pay" className="h-8 ml-2 inline-block object-contain" />
+                      </Button>
                     ) : (
                       <Button 
                         className="w-full h-12 bg-emerald-500/50 text-white font-medium" 
@@ -1208,6 +1212,25 @@ export function Wallet({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Stripe Payment Modal - rendered at page level to avoid z-index issues */}
+      {userId && cardDepositAmount && parseFloat(cardDepositAmount) >= 20 && (
+        <StripePaymentModal
+          open={showStripePayment}
+          onClose={() => setShowStripePayment(false)}
+          userId={userId}
+          amount={parseFloat(cardDepositAmount)}
+          productType="wallet_deposit"
+          productName={`Wallet Deposit - $${parseFloat(cardDepositAmount).toFixed(2)}`}
+          metadata={{ depositCurrency: "USD", paymentMethod: "card" }}
+          onPaymentSuccess={() => {
+            setShowStripePayment(false);
+            queryClient.invalidateQueries();
+            setDepositSubmitted(true);
+            setDepositOpen(true); // Re-open deposit dialog to show success
+          }}
+        />
+      )}
     </>
   );
 }
