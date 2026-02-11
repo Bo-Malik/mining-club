@@ -63,9 +63,9 @@ substitutions:
   _DB_URL_SECRET: neon_database_url
   _FIREBASE_SA_SECRET: firebase_service_account_json
 
-  # Build-time Vite variables (set these in your Cloud Build trigger)
-  _VITE_FIREBASE_API_KEY: "REPLACE_ME"
-  _VITE_FIREBASE_PROJECT_ID: "REPLACE_ME"
-  _VITE_FIREBASE_APP_ID: "REPLACE_ME"
-  _VITE_FIREBASE_AUTH_DOMAIN: "REPLACE_ME"
-  _VITE_FIREBASE_STORAGE_BUCKET: "REPLACE_ME"
+  # Build-time Vite variables (these are public Firebase client config)
+  _VITE_FIREBASE_API_KEY: "AIzaSyCjBfwZr4k6mGHLjrhdXmlcV0ODH_6CuP0"
+  _VITE_FIREBASE_PROJECT_ID: "blockmint-393d2"
+  _VITE_FIREBASE_APP_ID: "1:1181184514:web:3474e047892c119fa3ad1b"
+  _VITE_FIREBASE_AUTH_DOMAIN: "blockmint-393d2.firebaseapp.com"
+  _VITE_FIREBASE_STORAGE_BUCKET: "blockmint-393d2.firebasestorage.app"
