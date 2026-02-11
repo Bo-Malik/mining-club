@@ -240,9 +240,15 @@
 
 /* iOS Keyboard handling - move modals and sheets up when keyboard is visible */
 body.keyboard-open [role="dialog"] {
-  top: 15% !important;
-  max-height: calc(100vh - var(--keyboard-height, 300px) - 60px) !important;
-  transition: top 0.25s ease-out, max-height 0.25s ease-out;
+  top: env(safe-area-inset-top, 10px) !important;
+  transform: translateX(-50%) translateY(0) !important;
+  max-height: calc(100vh - var(--keyboard-height, 300px) - env(safe-area-inset-top, 10px) - 20px) !important;
+  transition: top 0.2s ease-out, max-height 0.2s ease-out;
+  overflow-y: auto !important;
+}
+
+body.keyboard-open [role="dialog"] form {
+  padding-bottom: 20px;
 }
 
 body.keyboard-open [data-state="open"][data-side="bottom"] {

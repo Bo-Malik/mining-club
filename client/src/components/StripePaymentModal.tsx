@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useStripeConfig, createPaymentIntent } from "@/hooks/useStripe";
+import { useKeyboardAdjustment } from "@/hooks/useKeyboardAdjustment";
 import { CreditCard, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
 let stripePromise: Promise<Stripe | null> | null = null;
@@ -44,6 +45,9 @@ function PaymentForm({ onSuccess, onError, amount, productName }: PaymentFormPro
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  
+  // Handle keyboard on mobile
+  useKeyboardAdjustment();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,28 +85,37 @@ function PaymentForm({ onSuccess, onError, amount, productName }: PaymentFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="p-4 rounded-lg bg-muted/50 border border-border">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-muted-foreground">Product</span>
-          <span className="font-medium">{productName}</span>
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="p-3 rounded-lg bg-muted/50 border border-border">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-xl font-bold text-primary">${amount.toFixed(2)}</span>
+          <span className="text-sm text-muted-foreground">{productName}</span>
+          <span className="text-lg font-bold text-primary">${amount.toFixed(2)}</span>
         </div>
       </div>
       
-      <PaymentElement
-        options={{
-          layout: "accordion",
-        }}
-      />
+      <div className="min-h-[200px]">
+        <PaymentElement
+          options={{
+            layout: "accordion",
+            wallets: {
+              applePay: "auto",
+              googlePay: "auto",
+            },
+            defaultValues: {
+              billingDetails: {
+                address: {
+                  country: "US",
+                },
+              },
+            },
+          }}
+        />
+      </div>
       
       <Button
         type="submit"
         disabled={!stripe || isProcessing}
-        className="w-full h-12 text-base"
+        className="w-full h-12 text-base sticky bottom-0"
       >
         {isProcessing ? (
           <>
@@ -212,8 +225,8 @@ export function StripePaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-md mx-4 rounded-xl">
+        <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
             Payment
@@ -224,29 +237,30 @@ export function StripePaymentModal({
         </DialogHeader>
 
         {paymentStatus === "loading" && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
             <p className="text-muted-foreground">Setting up payment...</p>
           </div>
         )}
 
         {paymentStatus === "success" && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
-            <h3 className="text-xl font-bold mb-2">Payment Successful!</h3>
-            <p className="text-muted-foreground text-center">
-              ${amount.toFixed(2)} has been charged for {productName}
+          <div className="flex flex-col items-center justify-center py-8">
+            <CheckCircle2 className="w-12 h-12 text-green-500 mb-3" />
+            <h3 className="text-lg font-bold mb-1">Payment Successful!</h3>
+            <p className="text-muted-foreground text-center text-sm">
+              ${amount.toFixed(2)} charged for {productName}
             </p>
           </div>
         )}
 
         {paymentStatus === "error" && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <XCircle className="w-16 h-16 text-red-500 mb-4" />
-            <h3 className="text-xl font-bold mb-2">Payment Failed</h3>
-            <p className="text-muted-foreground text-center mb-4">{errorMessage}</p>
+          <div className="flex flex-col items-center justify-center py-8">
+            <XCircle className="w-12 h-12 text-red-500 mb-3" />
+            <h3 className="text-lg font-bold mb-1">Payment Failed</h3>
+            <p className="text-muted-foreground text-center text-sm mb-3">{errorMessage}</p>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => {
                 setPaymentStatus("idle");
                 setErrorMessage("");
