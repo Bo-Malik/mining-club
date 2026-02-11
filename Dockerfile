@@ -32,7 +32,7 @@ WORKDIR /app
 
 # Install production deps BEFORE setting NODE_ENV so postinstall scripts work
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm install --omit=dev --legacy-peer-deps && npm cache clean --force
 
 ENV NODE_ENV=production
 
