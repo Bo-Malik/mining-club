@@ -850,6 +850,7 @@ export function Wallet({
                         productName={`Wallet Deposit - $${parseFloat(cardDepositAmount).toFixed(2)}`}
                         metadata={{ depositCurrency: "USD", paymentMethod: "card" }}
                         className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-medium"
+                        onPaymentStart={() => setDepositOpen(false)}
                         onPaymentSuccess={() => {
                           queryClient.invalidateQueries();
                           setDepositSubmitted(true);

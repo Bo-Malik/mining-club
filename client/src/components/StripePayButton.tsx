@@ -18,6 +18,7 @@ interface StripePayButtonProps {
   productName: string;
   metadata?: Record<string, any>;
   onPaymentSuccess?: () => void;
+  onPaymentStart?: () => void; // Called when payment modal opens - use to close parent dialogs
   className?: string;
   variant?: "default" | "outline" | "secondary" | "ghost" | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
@@ -37,6 +38,7 @@ export function StripePayButton({
   productName,
   metadata,
   onPaymentSuccess,
+  onPaymentStart,
   className,
   variant = "default",
   size = "default",
@@ -51,6 +53,11 @@ export function StripePayButton({
     return null;
   }
 
+  const handleClick = () => {
+    onPaymentStart?.(); // Close parent dialog first
+    setShowPayment(true);
+  };
+
   return (
     <>
       <Button
@@ -58,7 +65,7 @@ export function StripePayButton({
         size={size}
         className={className}
         disabled={disabled}
-        onClick={() => setShowPayment(true)}
+        onClick={handleClick}
       >
         {children || (
           <>
