@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStripeConfig } from "@/hooks/useStripe";
-import { StripePaymentModal } from "./StripePaymentModal";
+import { StripePaymentModal } from "./StripePaymentScreen";
 import { CreditCard } from "lucide-react";
 import paymentMethodsImg from "@assets/payment-methods.png";
 
