@@ -1,0 +1,28 @@
+# .gcloudignore — files excluded when uploading source to Cloud Build / Cloud Run
+# This speeds up builds and avoids uploading unnecessary files.
+
+.git
+.gitignore
+.env
+.env.*
+
+# Native mobile builds (not needed for web deploy)
+android/
+ios/
+
+# Local dev artifacts
+node_modules/
+dist/
+.DS_Store
+
+# Documentation (not needed for build)
+*.md
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Assets that aren't used at runtime
+icons/

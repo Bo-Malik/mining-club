@@ -1,20 +1,44 @@
 # Cloud Build pipeline for deploying to Cloud Run.
 #
-# Prereqs:
-# - Enable Cloud Run + Cloud Build APIs
-# - Create the secrets in Secret Manager (see substitutions below)
-# - Create a Cloud Build trigger (or run manually) and override the _VITE_* substitutions
+# gcr.io is DEPRECATED — this file uses Artifact Registry (docker.pkg.dev).
+#
+# Prereqs (run once):
+#   1. Enable APIs:
+#        gcloud services enable cloudbuild.googleapis.com run.googleapis.com \
+#          artifactregistry.googleapis.com secretmanager.googleapis.com
+#   2. Create Artifact Registry repo (if it doesn't exist):
+#        gcloud artifacts repositories create cloud-run-builds \
+#          --repository-format=docker --location=us-central1
+#   3. Create secrets in Secret Manager:
+#        gcloud secrets create neon_database_url --data-file=-
+#        gcloud secrets create firebase_service_account_json --data-file=-
+#   4. Grant Cloud Build SA → Cloud Run Admin + Service Account User:
+#        PROJECT_NUM=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+#        gcloud projects add-iam-policy-binding $PROJECT_ID \
+#          --member="serviceAccount:${PROJECT_NUM}@cloudbuild.gserviceaccount.com" \
+#          --role="roles/run.admin"
+#        gcloud projects add-iam-policy-binding $PROJECT_ID \
+#          --member="serviceAccount:${PROJECT_NUM}@cloudbuild.gserviceaccount.com" \
+#          --role="roles/iam.serviceAccountUser"
+#   5. Create Cloud Build trigger on GitHub push to main:
+#        gcloud builds triggers create github \
+#          --repo-name=mining-club --repo-owner=GitBodda \
+#          --branch-pattern="^main$" \
+#          --build-config=cloudbuild.yaml
 #
 # Notes:
-# - Vite variables (VITE_*) must be provided at *build time*.
-# - Server secrets (DB + Firebase Admin) must be provided at *runtime* via Cloud Run.
+# - Vite variables (VITE_*) are provided at *build time* via --build-arg.
+# - Server secrets (DB + Firebase Admin) are injected at *runtime* via --set-secrets.
 
 steps:
+  # Step 1: Build Docker image → Artifact Registry
   - name: gcr.io/cloud-builders/docker
     args:
       - build
       - -t
-      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_SERVICE:$BUILD_ID
+      - -t
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_SERVICE:latest
       - --build-arg
       - VITE_FIREBASE_API_KEY=$_VITE_FIREBASE_API_KEY
       - --build-arg
@@ -27,11 +51,14 @@ steps:
       - VITE_FIREBASE_STORAGE_BUCKET=$_VITE_FIREBASE_STORAGE_BUCKET
       - .
 
+  # Step 2: Push image to Artifact Registry
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
+      - --all-tags
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_SERVICE
 
+  # Step 3: Deploy to Cloud Run
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: gcloud
     args:
@@ -39,31 +66,41 @@ steps:
       - deploy
       - $_SERVICE
       - --image
-      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_SERVICE:$BUILD_ID
       - --region
       - $_REGION
       - --platform
       - managed
       - --allow-unauthenticated
+      - --port
+      - "8080"
+      - --cpu
+      - "1"
+      - --memory
+      - 512Mi
+      - --min-instances
+      - "0"
+      - --max-instances
+      - "3"
+      - --timeout
+      - 300s
+      - --set-env-vars
+      - NODE_ENV=production,PORT=8080
       - --set-secrets
-      - DATABASE_URL_POOLER=$_DB_URL_SECRET:latest,DATABASE_URL=$_DB_URL_SECRET:latest,FIREBASE_SERVICE_ACCOUNT=$_FIREBASE_SA_SECRET:latest
+      - DATABASE_URL_POOLER=neon_database_url:latest,DATABASE_URL=neon_database_url:latest,FIREBASE_SERVICE_ACCOUNT=firebase_service_account_json:latest
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
 images:
-  - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_SERVICE:$BUILD_ID
 
 substitutions:
   _SERVICE: mining-club
   _REGION: us-central1
+  _AR_REPO: cloud-run-builds
 
-  # Secret Manager secret NAMES (create these in your GCP project)
-  # IMPORTANT: Do NOT put actual secret values (DB URLs, private keys) into this file.
-  _DB_URL_SECRET: neon_database_url
-  _FIREBASE_SA_SECRET: firebase_service_account_json
-
-  # Build-time Vite variables (these are public Firebase client config)
+  # Build-time Vite variables (these are public Firebase client config — safe to commit)
   _VITE_FIREBASE_API_KEY: "AIzaSyCjBfwZr4k6mGHLjrhdXmlcV0ODH_6CuP0"
   _VITE_FIREBASE_PROJECT_ID: "blockmint-393d2"
   _VITE_FIREBASE_APP_ID: "1:1181184514:web:3474e047892c119fa3ad1b"

@@ -43,6 +43,7 @@ import type { ChartDataPoint, MiningContract, PoolStatus } from "@/lib/types";
 import btcMineImg from "@assets/Bitcoin_Mine_1766014388617.webp";
 import ltcMineImg from "@assets/Gemini_Generated_Image_1ri2av1ri2av1ri2_(1)_1766014388604.webp";
 import btcMiningCart from "@assets/asic-miner-hardware-3d-icon-png-download-11211351.webp";
+import btcPremiumPlusImg from "@assets/PremiumPlus.png";
 import ltcMiningCart from "@assets/Gemini_Generated_Image_46ieyx46ieyx46ie_(1)_1766014388603.webp";
 
 interface MiningProps {
@@ -123,7 +124,7 @@ const miningPackages: MiningPackage[] = [
     dailyReturnBTC: 0.00003150,
     paybackMonths: 7,
     efficiency: "15W/TH",
-    image: btcMiningCart,
+    image: btcPremiumPlusImg,
   },
 ];
 
@@ -574,7 +575,7 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
   const { convert, getSymbol } = useCurrency();
   const { btcPrice } = useBTCPrice();
   
-  const [btcHashrate, setBtcHashrate] = useState<number>(1);
+  const [btcHashrate, setBtcHashrate] = useState<number>(0.3);
   const [period, setPeriod] = useState<"daily" | "annual">("annual");
   
   // Base price is $30 per 1TH
@@ -640,15 +641,15 @@ function HashRateCalculator({ onPurchase, isPending, userId }: { onPurchase: (da
           </div>
           <Slider
             value={[btcHashrate]}
-            onValueChange={(v) => setBtcHashrate(v[0])}
-            min={1}
+            onValueChange={(v) => setBtcHashrate(Math.round(v[0] * 10) / 10)}
+            min={0.3}
             max={500}
-            step={1}
+            step={0.1}
             className="py-2"
             data-testid="slider-hashrate"
           />
           <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-            <span>1 TH/s</span>
+            <span>0.3 TH/s</span>
             <span>500 TH/s</span>
           </div>
         </div>

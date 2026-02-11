@@ -8,3 +8,17 @@ dist
 client/.env
 client/.env.*
 .DS_Store
+
+# Native mobile builds (not needed for Docker image)
+android/
+ios/
+
+# Documentation
+*.md
+
+# IDE
+.vscode/
+.idea/
+
+# Icons source (not needed at runtime)
+icons/
