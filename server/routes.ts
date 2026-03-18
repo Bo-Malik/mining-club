@@ -2134,6 +2134,18 @@ export async function registerRoutes(
       }
 
       console.log("Auth sync: User created/updated", { userId: result.user.id, email: result.user.email });
+
+      // ── Attribute referral code if provided ──
+      const referralCode = req.body?.referralCode as string | undefined;
+      if (referralCode && result.user) {
+        try {
+          const { growthService } = await import("./services/growthService");
+          await growthService.attributeReferral(result.user.id, referralCode);
+        } catch (refErr) {
+          console.error("Referral attribution error (non-fatal):", refErr);
+        }
+      }
+
       res.json({ user: result.user });
     } catch (error) {
       console.error("Error syncing auth user:", error);
@@ -4223,6 +4235,29 @@ export async function registerRoutes(
             paymentIntent.id,
             paymentIntent.charges?.data?.[0]?.receipt_url
           );
+
+          // ── Trigger referral qualification for the purchasing user ──
+          try {
+            const { stripePayments } = await import("@shared/schema");
+            const [payRec] = await db.select().from(stripePayments)
+              .where(eq(stripePayments.stripePaymentIntentId, paymentIntent.id));
+            if (payRec?.userId) {
+              const { growthService } = await import("./services/growthService");
+              await growthService.qualifyReferral(payRec.userId, {
+                amount: payRec.amount,
+                currency: payRec.currency,
+                purchaseId: payRec.id,
+              });
+              // Also fire purchase reward rules
+              const { rewardsService } = await import("./services/rewardsService");
+              await rewardsService.checkAndTriggerRewards(payRec.userId, "deposit", {
+                amount: payRec.amount,
+                currency: payRec.currency,
+              });
+            }
+          } catch (growthErr) {
+            console.error("Post-payment growth hook error (non-fatal):", growthErr);
+          }
           break;
         }
         case "payment_intent.payment_failed": {

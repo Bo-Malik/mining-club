@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Bell, Sun, Moon, X, Settings as SettingsIcon } from "lucide-react";
+import { ChevronLeft, Bell, Sun, Moon, X, Settings as SettingsIcon, Sparkles } from "lucide-react";
+import { Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { ScrollAwareStatusBar } from "./ScrollAwareStatusBar";
@@ -67,6 +68,18 @@ export function GlobalHeader({
             >
               <SettingsIcon className="w-[17px] h-[17px] text-muted-foreground" />
             </motion.button>
+            <Link href="/growth">
+              <motion.button
+                className="h-10 px-3 rounded-2xl bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-sm font-semibold shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 transition-all"
+                whileTap={{ scale: 0.96 }}
+                type="button"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Growth Hub</span>
+                </div>
+              </motion.button>
+            </Link>
           </div>
 
           {/* Right Side Icons */}

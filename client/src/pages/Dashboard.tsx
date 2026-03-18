@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox, Gift, TrendingUp, TrendingDown, Sparkles, ExternalLink, Sun, Moon, BarChart3, Copy, Check, Menu, Home, Wallet, PieChart, History, HelpCircle, LogOut, Shield, RefreshCw, ChevronLeft, ChevronRight, Fan, Minus, Plus, Loader2, CheckCircle2 } from "lucide-react";
+import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox, Gift, TrendingUp, TrendingDown, Sparkles, ExternalLink, Sun, Moon, BarChart3, Copy, Check, Menu, Home, Wallet, PieChart, History, HelpCircle, LogOut, Shield, RefreshCw, ChevronLeft, ChevronRight, Fan, Minus, Plus, Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { SiX, SiInstagram } from "react-icons/si";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -328,6 +328,7 @@ export function Dashboard({
   const [prevBalance, setPrevBalance] = useState(totalBalance);
   const [balanceIncreased, setBalanceIncreased] = useState(false);
   const [showDepositQR, setShowDepositQR] = useState(false);
+  const [showStarterModal, setShowStarterModal] = useState(false);
 
   // Detect when balance increases (from deposit confirmation)
   useEffect(() => {
@@ -380,7 +381,7 @@ export function Dashboard({
   
   console.log("Dashboard user check:", { userStr: !!userStr, user: !!user, userId });
 
-  const { data: miningPurchases = [] } = useQuery<any[]>({
+  const { data: miningPurchases = [], isFetched: miningPurchasesFetched } = useQuery<any[]>({
     queryKey: ["/api/users", userId, "mining-purchases"],
     queryFn: async () => {
       if (!userId) return [];
@@ -438,6 +439,15 @@ export function Dashboard({
     const price = cryptoPrices[currency as keyof typeof cryptoPrices]?.price ?? 0;
     return sum + (amount as number) * price;
   }, 0);
+
+  useEffect(() => {
+    if (!userId || !miningPurchasesFetched) return;
+    const dismissed = localStorage.getItem("starterMinerModalDismissed") === "true";
+    const hasPaidPurchases = (activeMiningPurchases?.length || 0) > 0;
+    if (!hasPaidPurchases && !dismissed) {
+      setShowStarterModal(true);
+    }
+  }, [userId, activeMiningPurchases.length, miningPurchasesFetched]);
 
   // Submit deposit request mutation
   const submitDepositMutation = useMutation({
@@ -717,6 +727,32 @@ export function Dashboard({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
+        {/* Growth Hub banner — shown until user has active purchases */}
+        {!activeMiningPurchases.length && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <Link href="/growth">
+              <div className="relative rounded-2xl overflow-hidden border border-orange-500/40 p-4 cursor-pointer active:scale-[0.98] transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-600/25 via-amber-500/15 to-yellow-400/10" />
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/20 rounded-full blur-2xl" />
+                <div className="relative z-10 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/30">
+                    <Gift className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground">🎉 Free Starter Miner — Claim Yours!</p>
+                    <p className="text-xs text-muted-foreground truncate">0.5 TH/s · 30 days free · No card required</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-orange-400 shrink-0" />
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+        )}
+
         <LiquidGlassCard key={`portfolio-${convertedBalance}`} glow="btc" delay={0.1} variant="strong" topFade className="relative">
         <div className="absolute -right-4 -top-4 w-32 h-32 pointer-events-none z-20">
           <DotLottieReact
@@ -1149,6 +1185,28 @@ export function Dashboard({
           </div>
         </div>
       </LiquidGlassCard>
+
+      {/* Growth Hub quick entry - visible near top */}
+      <Link href="/growth">
+        <GlassCard
+          delay={0.18}
+          className="p-4 mb-2 hover-elevate cursor-pointer border-orange-500/30 bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent"
+          data-testid="card-growth-hub-top"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shrink-0">
+              <Gift className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-foreground font-display leading-tight">Growth Hub</p>
+              <p className="text-xs text-muted-foreground truncate">Starter Miner مجاني · إحالات $10 · نادي المؤسسين</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-orange-500/15 flex items-center justify-center">
+              <ArrowRight className="w-4 h-4 text-orange-400" />
+            </div>
+          </div>
+        </GlassCard>
+      </Link>
 
       {/* Hashrate and Active Contracts - Moved to top */}
       <motion.div
@@ -1639,9 +1697,108 @@ export function Dashboard({
               </div>
             </div>
           </GlassCard>
+
+          <Link href="/growth">
+            <GlassCard
+              delay={0.7}
+              className="p-4 hover-elevate cursor-pointer border-orange-500/20"
+              data-testid="card-growth-hub"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shrink-0">
+                  <Gift className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground font-display">Growth Hub</p>
+                  <p className="text-sm text-muted-foreground">Free Miner · Referrals · Founding Club</p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-orange-400" />
+                </div>
+              </div>
+            </GlassCard>
+          </Link>
         </div>
       </motion.div>
       </motion.div>
+
+      {/* Starter Miner onboarding modal */}
+      {showStarterModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 60 }}
+            className="w-full max-w-md rounded-3xl border border-orange-500/30 bg-background/95 shadow-2xl overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-transparent pointer-events-none rounded-3xl" />
+            <div className="relative z-10 p-5 space-y-4">
+              {/* Header */}
+              <div className="flex items-start gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/30">
+                  <Gift className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-lg font-bold">🎉 Free Starter Miner!</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">You've been given <span className="text-orange-400 font-semibold">0.5 TH/s free</span> for 30 days — no purchase needed.</p>
+                </div>
+                <button
+                  aria-label="Dismiss starter miner modal"
+                  className="text-muted-foreground hover:text-foreground p-1"
+                  onClick={() => {
+                    localStorage.setItem("starterMinerModalDismissed", "true");
+                    setShowStarterModal(false);
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Perks */}
+              <div className="space-y-2 text-sm">
+                {[
+                  "Activated automatically — no card required",
+                  "Earns real Bitcoin (Satoshis) every day for 30 days",
+                  "Share your referral link to earn $10 USDT per friend",
+                  "First 500 users get a permanent Founding Member badge",
+                ].map((perk) => (
+                  <div key={perk} className="flex items-start gap-2 text-muted-foreground">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{perk}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <Link href="/growth/starter">
+                  <Button
+                    className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white border-0 font-bold shadow-md shadow-orange-500/25"
+                    onClick={() => {
+                      localStorage.setItem("starterMinerModalDismissed", "true");
+                      setShowStarterModal(false);
+                    }}
+                  >
+                    View My Miner
+                  </Button>
+                </Link>
+                <Link href="/growth">
+                  <Button
+                    variant="outline"
+                    className="w-full border-orange-500/40 text-orange-400 hover:bg-orange-500/10"
+                    onClick={() => {
+                      localStorage.setItem("starterMinerModalDismissed", "true");
+                      setShowStarterModal(false);
+                    }}
+                  >
+                    Growth Hub
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Feedback Prompt - shows for eligible users */}
       <FeedbackPrompt />

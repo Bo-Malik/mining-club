@@ -45,6 +45,14 @@ const DatabaseAdmin = lazy(() => import("@/pages/DatabaseAdmin").then(m => ({ de
 const ArticlePage = lazy(() => import("@/pages/ArticlePage").then(m => ({ default: m.ArticlePage })));
 const News = lazy(() => import("@/pages/News").then(m => ({ default: m.News })));
 const Support = lazy(() => import("@/pages/Support"));
+const GrowthHub = lazy(() => import("@/pages/GrowthHub").then(m => ({ default: m.GrowthHub })));
+const StarterMiner = lazy(() => import("@/pages/StarterMiner").then(m => ({ default: m.StarterMiner })));
+const Founders = lazy(() => import("@/pages/Founders").then(m => ({ default: m.Founders })));
+const Ambassador = lazy(() => import("@/pages/Ambassador").then(m => ({ default: m.Ambassador })));
+const Transparency = lazy(() => import("@/pages/Transparency").then(m => ({ default: m.Transparency })));
+const HowItWorks = lazy(() => import("@/pages/HowItWorks").then(m => ({ default: m.HowItWorks })));
+const ReferralTerms = lazy(() => import("@/pages/ReferralTerms").then(m => ({ default: m.ReferralTerms })));
+const ReferralLanding = lazy(() => import("@/pages/ReferralLanding").then(m => ({ default: m.ReferralLanding })));
 
 // Safe Mode pages and app shell (compliance mode for mobile app)
 const SafeHome = lazy(() => import("@/pages/SafeHome").then(m => ({ default: m.SafeHome })));
@@ -148,6 +156,12 @@ function MobileApp() {
       // Only clear version-related items, not all localStorage
       localStorage.setItem("appVersion", currentVersion);
     }
+
+    // Capture ?ref= referral code from URL and persist to localStorage
+    const urlRef = new URLSearchParams(window.location.search).get("ref");
+    if (urlRef) {
+      localStorage.setItem("ref", urlRef);
+    }
     
     const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
     const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -184,12 +198,15 @@ function MobileApp() {
       try {
         const idToken = await firebaseUser.getIdToken();
         console.log("Syncing user with backend:", firebaseUser.email);
+        // Pick up referral code from localStorage (set by ReferralLanding or ?ref= param)
+        const refCode = localStorage.getItem("ref") || undefined;
         const res = await fetch("/api/auth/sync", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${idToken}`,
             "Content-Type": "application/json",
           },
+          body: JSON.stringify(refCode ? { referralCode: refCode } : {}),
         });
         
         if (!res.ok) {
@@ -584,6 +601,28 @@ function AppRouter() {
       </Route>
       <Route path="/history">
         {() => <History />}
+      </Route>
+      <Route path="/r/:code" component={ReferralLanding} />
+      <Route path="/growth/starter">
+        {() => <StarterMiner onBack={() => window.history.back()} />}
+      </Route>
+      <Route path="/growth">
+        {() => <GrowthHub />}
+      </Route>
+      <Route path="/founders">
+        {() => <Founders onBack={() => window.history.back()} />}
+      </Route>
+      <Route path="/ambassador">
+        {() => <Ambassador onBack={() => window.history.back()} />}
+      </Route>
+      <Route path="/transparency">
+        {() => <Transparency onBack={() => window.history.back()} />}
+      </Route>
+      <Route path="/how-it-works">
+        {() => <HowItWorks onBack={() => window.history.back()} />}
+      </Route>
+      <Route path="/referral-terms">
+        {() => <ReferralTerms onBack={() => window.history.back()} />}
       </Route>
       <Route path="/" component={MobileApp} />
       <Route component={MobileApp} />

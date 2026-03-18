@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Home, Wallet, TrendingUp, Pickaxe, Gem } from "lucide-react";
+import { Home, Wallet, TrendingUp, Pickaxe, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 
 type TabType = "home" | "wallet" | "invest" | "mining" | "solo";
 
@@ -12,14 +13,15 @@ interface BottomNavProps {
 }
 
 const tabs = [
-  { id: "home" as const, icon: Home, label: "Home" },
-  { id: "wallet" as const, icon: Wallet, label: "Wallet" },
-  { id: "invest" as const, icon: TrendingUp, label: "Yield" },
-  { id: "mining" as const, icon: Pickaxe, label: "Mining" },
-  { id: "solo" as const, icon: Gem, label: "Solo" },
+  { id: "home" as const, icon: Home, label: "Home", route: null },
+  { id: "wallet" as const, icon: Wallet, label: "Wallet", route: null },
+  { id: "invest" as const, icon: TrendingUp, label: "Yield", route: null },
+  { id: "mining" as const, icon: Pickaxe, label: "Mining", route: null },
+  { id: "solo" as const, icon: Sparkles, label: "Grow", route: "/growth" },
 ];
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+  const [location, navigate] = useLocation();
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-safe">
       <motion.nav
@@ -42,14 +44,16 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
         
         <div className="flex items-center justify-around px-2 h-16">
         {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
+          const isActive = tab.route
+            ? location.startsWith(tab.route)
+            : activeTab === tab.id;
           const Icon = tab.icon;
 
           return (
             <motion.button
               key={tab.id}
               data-testid={`nav-${tab.id}`}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => tab.route ? navigate(tab.route) : onTabChange(tab.id)}
               className={cn(
                 "flex flex-col items-center justify-center",
                 "w-14 h-14 rounded-2xl",

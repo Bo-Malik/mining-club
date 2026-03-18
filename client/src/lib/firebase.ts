@@ -4,6 +4,7 @@ import type { FirebaseApp } from "firebase/app";
 import { 
   getAuth, 
   signInWithPopup,
+  signInWithRedirect,
   signInWithCredential,
   getRedirectResult, 
   GoogleAuthProvider,
@@ -15,7 +16,9 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   updateProfile,
-  User
+  User,
+  setPersistence,
+  browserLocalPersistence,
 } from "firebase/auth";
 import { Capacitor } from '@capacitor/core';
 import { getMessaging, getToken, onMessage, type Messaging } from "firebase/messaging";
@@ -41,6 +44,10 @@ if (firebaseConfigured) {
     };
     app = initializeApp(firebaseConfig);
     authInstance = getAuth(app);
+    // Use localStorage to avoid sessionStorage issues with redirect flows
+    setPersistence(authInstance, browserLocalPersistence).catch((err) => {
+      console.warn("Failed to set auth persistence to localStorage", err);
+    });
     
     // Initialize messaging for push notifications
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -62,9 +69,24 @@ if (firebaseConfigured) {
 export const auth = authInstance;
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
 const appleProvider = new OAuthProvider('apple.com');
 appleProvider.addScope('email');
 appleProvider.addScope('name');
+
+function shouldUseGoogleRedirectFallback(): boolean {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  // CRITICAL FIX: On Capacitor native (iOS / Android), signInWithPopup opens an
+  // SFSafariViewController / Chrome Custom Tab that stays IN-PROCESS.
+  // signInWithRedirect instead opens the SYSTEM browser — when the user returns,
+  // the WebView's sessionStorage is gone → Firebase throws "missing initial state".
+  // On native we must always use popup, never redirect.
+  if (Capacitor.isNativePlatform()) return false;
+  const ua = navigator.userAgent || "";
+  // On the web, only redirect for social in-app browsers that block popups
+  const isInAppBrowser = /FBAN|FBAV|Instagram|Line|Twitter|Snapchat|TikTok/i.test(ua);
+  return isInAppBrowser;
+}
 
 // Sign in with Google
 export async function signInWithGoogle() {
@@ -73,11 +95,57 @@ export async function signInWithGoogle() {
       console.warn("signInWithGoogle called but Firebase is not configured");
       return null;
     }
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
+    const useRedirect = shouldUseGoogleRedirectFallback();
+    // In in-app browsers / iOS we go straight to redirect to avoid popup blocks
+    if (useRedirect) {
+      await signInWithRedirect(auth, googleProvider);
+      throw new Error("REDIRECT_STARTED");
+    }
+
+    const popupTimeoutMs = import.meta.env.PROD ? 12000 : 20000;
+    const popupResult = await Promise.race([
+      signInWithPopup(auth, googleProvider),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("POPUP_TIMEOUT")), popupTimeoutMs);
+      }),
+    ]);
+
+    return popupResult.user;
   } catch (error) {
+    const err = error as any;
+    const code = err?.code || "";
+    const isPopupBlocked =
+      err?.message === "POPUP_TIMEOUT" ||
+      code === "auth/popup-blocked" ||
+      code === "auth/popup-closed-by-user" ||
+      code === "auth/cancelled-popup-request" ||
+      code === "auth/operation-not-supported-in-this-environment";
+
+    if (isPopupBlocked) {
+      // On native Capacitor never redirect — it breaks sessionStorage.
+      // On web, redirect is safe as a last resort.
+      if (!Capacitor.isNativePlatform() && auth) {
+        console.warn("Google popup blocked on web — falling back to redirect.", error);
+        await signInWithRedirect(auth, googleProvider);
+        throw new Error("REDIRECT_STARTED");
+      }
+      throw new Error("GOOGLE_POPUP_BLOCKED");
+    }
+
     console.error("Google sign-in error:", error);
     throw error;
+  }
+}
+
+// Handle redirect result (used after signInWithRedirect)
+export async function getRedirectAuthResult() {
+  if (!auth) return null;
+  try {
+    const res = await getRedirectResult(auth);
+    return res?.user || null;
+  } catch (err) {
+    console.error("Redirect auth result error:", err);
+    throw err;
   }
 }
 

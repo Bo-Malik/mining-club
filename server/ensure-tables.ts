@@ -208,6 +208,94 @@ export async function ensureTablesExist() {
       );
     `);
 
+    // ── Growth system tables ─────────────────────────────────────────────────
+
+    // Extend users table with growth columns
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_founder BOOLEAN DEFAULT false`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS founder_sequence INTEGER`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_ambassador BOOLEAN DEFAULT false`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ambassador_status TEXT DEFAULT 'none'`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ambassador_applied_at TIMESTAMP`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ambassador_approved_at TIMESTAMP`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "starter_rewards" (
+        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" varchar NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        "status" text NOT NULL DEFAULT 'active',
+        "hashrate" real NOT NULL DEFAULT 0.5,
+        "hashrate_unit" text NOT NULL DEFAULT 'TH/s',
+        "crypto" text NOT NULL DEFAULT 'BTC',
+        "duration_days" integer NOT NULL DEFAULT 30,
+        "daily_return_btc" real NOT NULL DEFAULT 0.000001,
+        "total_earned" real NOT NULL DEFAULT 0,
+        "qualifying_event" text NOT NULL DEFAULT 'signup',
+        "mining_purchase_id" varchar REFERENCES mining_purchases(id),
+        "granted_at" timestamp DEFAULT NOW(),
+        "activated_at" timestamp,
+        "expires_at" timestamp,
+        "revoked_at" timestamp,
+        "revocation_reason" text,
+        CONSTRAINT starter_rewards_user_unique UNIQUE (user_id)
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "referral_events" (
+        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+        "referrer_id" varchar NOT NULL REFERENCES users(id),
+        "referred_user_id" varchar NOT NULL REFERENCES users(id),
+        "referral_code" text NOT NULL,
+        "event_type" text NOT NULL,
+        "event_data" jsonb,
+        "reward_issued" boolean NOT NULL DEFAULT false,
+        "reward_amount" real,
+        "reward_currency" text,
+        "idempotency_key" text UNIQUE,
+        "created_at" timestamp DEFAULT NOW(),
+        "qualified_at" timestamp
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "founder_members" (
+        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" varchar NOT NULL REFERENCES users(id) UNIQUE,
+        "sequence" integer NOT NULL,
+        "tier" text NOT NULL DEFAULT 'founding',
+        "badge_granted_at" timestamp DEFAULT NOW(),
+        "benefits" jsonb,
+        "is_active" boolean NOT NULL DEFAULT true,
+        "created_at" timestamp DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "growth_badges" (
+        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" varchar NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        "badge_slug" text NOT NULL,
+        "badge_name" text NOT NULL,
+        "badge_level" integer NOT NULL DEFAULT 1,
+        "earned_at" timestamp DEFAULT NOW(),
+        "metadata" jsonb
+      );
+    `);
+
+    // Seed growth-related app_settings if missing
+    await client.query(`
+      INSERT INTO app_settings (key, value, type, description)
+      VALUES
+        ('starter_hashrate_ths',    '0.5',   'number',  'Starter miner hashrate in TH/s'),
+        ('starter_duration_days',   '30',    'number',  'Starter miner duration in days'),
+        ('starter_daily_return_btc','0.000001','number','Starter miner daily BTC return estimate'),
+        ('founder_cap',             '500',   'number',  'Maximum number of founding members'),
+        ('referral_reward_usd',     '10',    'number',  'Referral reward in USD equivalent (USDT)'),
+        ('referral_qualify_min_usd','50',    'number',  'Minimum purchase USD to qualify a referral'),
+        ('growth_enabled',          'true',  'boolean', 'Master switch for growth features')
+      ON CONFLICT (key) DO NOTHING;
+    `);
+
     console.log("✓ All database tables verified/created");
   } catch (error) {
     console.error("Error ensuring tables exist:", error);

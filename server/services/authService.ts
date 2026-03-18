@@ -2,7 +2,7 @@
 // Handles user authentication, registration, and session management
 
 import { db } from "../db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import { verifyIdToken, setCustomClaims, deleteUser as deleteFirebaseUser } from "../firebase-admin";
 
@@ -39,27 +39,31 @@ export const authService = {
    */
   async getOrCreateUser(firebaseUid: string, email: string, displayName?: string, photoUrl?: string): Promise<AuthResult> {
     try {
+      const normalizedEmail = email.trim().toLowerCase();
+
+      // Resolve admin role once and reuse for both existing/new users
+      const adminEmail = await db.select().from(schema.adminEmails)
+        .where(and(
+          sql`lower(${schema.adminEmails.email}) = ${normalizedEmail}`,
+          eq(schema.adminEmails.isActive, true)
+        ));
+
+      const shouldBeAdmin = adminEmail.length > 0;
+      const adminRole = shouldBeAdmin ? adminEmail[0].role : "user";
+
       // Check if user exists
       const existingUsers = await db.select().from(schema.users)
         .where(eq(schema.users.firebaseUid, firebaseUid));
 
       if (existingUsers.length > 0) {
         const existingUser = existingUsers[0];
-        
-        // Check if email is now in admin list (may have been added after registration)
-        const adminEmail = await db.select().from(schema.adminEmails)
-          .where(and(
-            eq(schema.adminEmails.email, email),
-            eq(schema.adminEmails.isActive, true)
-          ));
-
-        const shouldBeAdmin = adminEmail.length > 0;
-        const newRole = shouldBeAdmin ? adminEmail[0].role : existingUser.role;
+        const newRole = shouldBeAdmin ? adminRole : existingUser.role;
         
         // Update last login and role if needed
         const [updatedUser] = await db.update(schema.users)
           .set({ 
             lastLoginAt: new Date(),
+            email: normalizedEmail,
             role: newRole 
           })
           .where(eq(schema.users.id, existingUser.id))
@@ -73,30 +77,52 @@ export const authService = {
         return { success: true, user: updatedUser };
       }
 
-      // Check if email is designated as admin
-      const adminEmail = await db.select().from(schema.adminEmails)
-        .where(and(
-          eq(schema.adminEmails.email, email),
-          eq(schema.adminEmails.isActive, true)
-        ));
+      // Fallback: if same email exists (legacy/manual user), link it to this Firebase UID.
+      const emailUsers = await db.select().from(schema.users)
+        .where(sql`lower(${schema.users.email}) = ${normalizedEmail}`);
 
-      const isAdmin = adminEmail.length > 0;
-      const role = isAdmin ? adminEmail[0].role : "user";
+      if (emailUsers.length > 0) {
+        const existingByEmail = emailUsers[0];
+
+        // If email belongs to another Firebase UID, do not overwrite silently.
+        if (existingByEmail.firebaseUid && existingByEmail.firebaseUid !== firebaseUid) {
+          return { success: false, error: "Email is linked to another account" };
+        }
+
+        const newRole = shouldBeAdmin ? adminRole : existingByEmail.role;
+        const [updatedUser] = await db.update(schema.users)
+          .set({
+            firebaseUid,
+            displayName: displayName || existingByEmail.displayName || normalizedEmail.split("@")[0],
+            photoUrl: photoUrl || existingByEmail.photoUrl,
+            role: newRole,
+            isActive: true,
+            lastLoginAt: new Date(),
+          })
+          .where(eq(schema.users.id, existingByEmail.id))
+          .returning();
+
+        if (shouldBeAdmin && existingByEmail.role !== newRole) {
+          await setCustomClaims(firebaseUid, { admin: true, role: newRole });
+        }
+
+        return { success: true, user: updatedUser };
+      }
 
       // Create new user
       const [newUser] = await db.insert(schema.users).values({
         firebaseUid,
-        email,
-        displayName: displayName || email.split("@")[0],
+        email: normalizedEmail,
+        displayName: displayName || normalizedEmail.split("@")[0],
         photoUrl,
-        role,
+        role: adminRole,
         isActive: true,
         lastLoginAt: new Date(),
       }).returning();
 
       // Set Firebase custom claims if admin
-      if (isAdmin) {
-        await setCustomClaims(firebaseUid, { admin: true, role });
+      if (shouldBeAdmin) {
+        await setCustomClaims(firebaseUid, { admin: true, role: adminRole });
       }
 
       // Create default wallets for new user
@@ -107,10 +133,25 @@ export const authService = {
         userId: newUser.id,
       }).onConflictDoNothing();
 
+      // ── Growth system: grant starter miner + check founder status ──
+      // This is intentionally fire-and-forget so it never blocks auth
+      setImmediate(async () => {
+        try {
+          const { growthService } = await import("./growthService");
+          await growthService.grantStarterMiner(newUser.id);
+
+          // If referral code was supplied in the request context, attribute it
+          // (also handled in /api/growth/attribute-referral for client-side attribution)
+        } catch (err) {
+          console.error("Growth system post-signup error (non-fatal):", err);
+        }
+      });
+
       return { success: true, user: newUser };
     } catch (error) {
       console.error("Error in getOrCreateUser:", error);
-      return { success: false, error: "Failed to get or create user" };
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { success: false, error: `Failed to get or create user: ${errorMessage}` };
     }
   },
 
@@ -149,9 +190,10 @@ export const authService = {
    * Check if email is designated as admin
    */
   async isAdminEmail(email: string): Promise<boolean> {
+    const normalizedEmail = email.trim().toLowerCase();
     const adminEmails = await db.select().from(schema.adminEmails)
       .where(and(
-        eq(schema.adminEmails.email, email),
+        sql`lower(${schema.adminEmails.email}) = ${normalizedEmail}`,
         eq(schema.adminEmails.isActive, true)
       ));
     

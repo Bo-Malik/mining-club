@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { SiGoogle, SiApple } from "react-icons/si";
@@ -13,7 +13,8 @@ import {
   signInWithEmail, 
   registerWithEmail,
   resetPassword,
-  resendVerificationEmail
+  resendVerificationEmail,
+  getRedirectAuthResult,
 } from "@/lib/firebase";
 
 import mixedMain from "@assets/Mixed_main_1766014388605.webp";
@@ -42,6 +43,29 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
   const [registeredEmail, setRegisteredEmail] = useState("");
   const { toast } = useToast();
   const isIOS = isIOSDevice();
+
+  // Handle redirect result (Google redirect fallback)
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const user = await getRedirectAuthResult();
+        if (user) {
+          toast({ title: "Welcome!", description: "You have successfully signed in." });
+          onComplete();
+        }
+      } catch (err: any) {
+        console.error("Redirect sign-in error:", err);
+        if (err?.message?.toLowerCase().includes("missing initial state")) {
+          toast({
+            title: "Google sign-in blocked",
+            description: "The browser blocked session storage. Try again using the system browser or disable private mode.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+    checkRedirect();
+  }, [onComplete, toast]);
 
   // Safety timeout to prevent infinite loading (90s for Apple Sign-In which requires user interaction)
   const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 90000): Promise<T> => {
@@ -116,7 +140,8 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
     setIsLoading(true);
     try {
       const authFn = provider === 'apple' ? signInWithApple : signInWithGoogle;
-      const user = await withTimeout(authFn(), 30000);
+      const socialTimeoutMs = provider === 'google' ? 45000 : 90000;
+      const user = await withTimeout(authFn(), socialTimeoutMs);
       
       if (!user) {
         throw new Error('NO_USER');
@@ -131,10 +156,25 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
       console.error("Auth error:", error);
       let title = "Oops! Something Went Wrong";
       let message = "Please try again in a moment.";
+
+      if (error.message === 'REDIRECT_STARTED') {
+        toast({
+          title: "Continuing Sign-In",
+          description: "Redirecting to Google sign-in...",
+        });
+        return;
+      }
+      if (error?.message?.toLowerCase().includes("missing initial state")) {
+        title = "Google sign-in blocked";
+        message = "The browser blocked session storage. Please try again using the system browser or disable incognito mode.";
+      }
       
       if (error.message === 'TIMEOUT') {
         title = "Connection Timeout";
         message = "The sign-in took too long. Please check your connection and try again.";
+      } else if (error.message === 'POPUP_TIMEOUT') {
+        title = "Sign-In Window Delayed";
+        message = "Popup took too long. We are switching to a more reliable login flow.";
       } else if (error.message === 'NO_USER' || error.message?.includes('cancelled') || error.message?.includes('cancel')) {
         title = "Sign-In Cancelled";
         message = "Sign-in was cancelled or failed. Please try again.";
@@ -170,8 +210,8 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
         message = "Please choose a stronger password with at least 6 characters.";
       }
       toast({
-        title: "Authentication Failed",
-        description: error.message || "Please try again.",
+        title,
+        description: message,
         variant: "destructive",
       });
     } finally {

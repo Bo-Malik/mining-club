@@ -19,6 +19,13 @@ export const users = pgTable("users", {
   referredBy: varchar("referred_by"),
   referralWalletType: text("referral_wallet_type"), // 'trc20' | 'binance_pay'
   referralWalletAddress: text("referral_wallet_address"),
+  // Growth system
+  isFounder: boolean("is_founder").default(false),
+  founderSequence: integer("founder_sequence"),
+  isAmbassador: boolean("is_ambassador").default(false),
+  ambassadorStatus: text("ambassador_status").default("none"), // none | pending | active | suspended
+  ambassadorAppliedAt: timestamp("ambassador_applied_at"),
+  ambassadorApprovedAt: timestamp("ambassador_approved_at"),
   createdAt: timestamp("created_at").defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
 });
@@ -1288,4 +1295,99 @@ export const insertStripePaymentSchema = createInsertSchema(stripePayments).omit
 });
 
 export type InsertStripePayment = z.infer<typeof insertStripePaymentSchema>;
+
+// ============ GROWTH SYSTEM ============
+
+// Starter rewards – one free miner per eligible new user
+export const starterRewards = pgTable("starter_rewards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("active"), // active | expired | revoked
+  hashrate: real("hashrate").notNull().default(0.5),
+  hashrateUnit: text("hashrate_unit").notNull().default("TH/s"),
+  crypto: text("crypto").notNull().default("BTC"),
+  durationDays: integer("duration_days").notNull().default(30),
+  dailyReturnBtc: real("daily_return_btc").notNull().default(0.000001),
+  totalEarned: real("total_earned").notNull().default(0),
+  qualifyingEvent: text("qualifying_event").notNull().default("signup"),
+  miningPurchaseId: varchar("mining_purchase_id").references(() => miningPurchases.id),
+  grantedAt: timestamp("granted_at").defaultNow(),
+  activatedAt: timestamp("activated_at"),
+  expiresAt: timestamp("expires_at"),
+  revokedAt: timestamp("revoked_at"),
+  revocationReason: text("revocation_reason"),
+});
+
+export const insertStarterRewardSchema = createInsertSchema(starterRewards).omit({
+  id: true,
+  grantedAt: true,
+  totalEarned: true,
+});
+
+export type InsertStarterReward = z.infer<typeof insertStarterRewardSchema>;
+export type StarterReward = typeof starterRewards.$inferSelect;
+
+// Referral events – full attribution funnel
+export const referralEvents = pgTable("referral_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id),
+  referredUserId: varchar("referred_user_id").notNull().references(() => users.id),
+  referralCode: text("referral_code").notNull(),
+  eventType: text("event_type").notNull(), // attributed | signup | qualified | reward_issued
+  eventData: jsonb("event_data"),
+  rewardIssued: boolean("reward_issued").notNull().default(false),
+  rewardAmount: real("reward_amount"),
+  rewardCurrency: text("reward_currency"),
+  idempotencyKey: text("idempotency_key").unique(), // prevents double rewards
+  createdAt: timestamp("created_at").defaultNow(),
+  qualifiedAt: timestamp("qualified_at"),
+});
+
+export const insertReferralEventSchema = createInsertSchema(referralEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertReferralEvent = z.infer<typeof insertReferralEventSchema>;
+export type ReferralEvent = typeof referralEvents.$inferSelect;
+
+// Founder members – founding miners club
+export const founderMembers = pgTable("founder_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  sequence: integer("sequence").notNull(),
+  tier: text("tier").notNull().default("founding"), // founding | early | community
+  badgeGrantedAt: timestamp("badge_granted_at").defaultNow(),
+  benefits: jsonb("benefits"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFounderMemberSchema = createInsertSchema(founderMembers).omit({
+  id: true,
+  createdAt: true,
+  badgeGrantedAt: true,
+});
+
+export type InsertFounderMember = z.infer<typeof insertFounderMemberSchema>;
+export type FounderMember = typeof founderMembers.$inferSelect;
+
+// Growth badges – earned badges per user
+export const growthBadges = pgTable("growth_badges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  badgeSlug: text("badge_slug").notNull(),  // starter_miner | founder | first_referral | etc.
+  badgeName: text("badge_name").notNull(),
+  badgeLevel: integer("badge_level").notNull().default(1),
+  earnedAt: timestamp("earned_at").defaultNow(),
+  metadata: jsonb("metadata"),
+});
+
+export const insertGrowthBadgeSchema = createInsertSchema(growthBadges).omit({
+  id: true,
+  earnedAt: true,
+});
+
+export type InsertGrowthBadge = z.infer<typeof insertGrowthBadgeSchema>;
+export type GrowthBadge = typeof growthBadges.$inferSelect;
 export type StripePayment = typeof stripePayments.$inferSelect;

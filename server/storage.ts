@@ -181,6 +181,12 @@ export class MemStorage implements IStorage {
       referredBy: insertUser.referredBy ?? null,
       referralWalletType: insertUser.referralWalletType ?? null,
       referralWalletAddress: insertUser.referralWalletAddress ?? null,
+      isFounder: insertUser.isFounder ?? null,
+      founderSequence: insertUser.founderSequence ?? null,
+      isAmbassador: insertUser.isAmbassador ?? null,
+      ambassadorStatus: insertUser.ambassadorStatus ?? null,
+      ambassadorAppliedAt: insertUser.ambassadorAppliedAt ?? null,
+      ambassadorApprovedAt: insertUser.ambassadorApprovedAt ?? null,
     };
     this.users.set(id, user);
     return user;

@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { registerRoutes } from "./routes";
 import { registerAdminRoutes } from "./admin-routes";
+import { registerGrowthRoutes } from "./growth-routes";
 import { initializeFirebaseAdmin } from "./firebase-admin";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -22,11 +23,20 @@ declare module "http" {
 }
 
 // ── Health check (MUST be first — Cloud Run probes this before secrets/DB are ready) ──
+const healthPayload = () => ({
+  status: "ok",
+  uptime: process.uptime(),
+  revision: process.env.K_REVISION || process.env.SCW_CONTAINER_ID || null,
+  version: process.env.APP_VERSION || process.env.RELEASE_VERSION || process.env.npm_package_version || null,
+  commit: process.env.GIT_SHA || process.env.COMMIT_SHA || null,
+  now: new Date().toISOString(),
+});
+
 app.get("/_health", (_req, res) => {
-  res.status(200).json({ status: "ok", uptime: process.uptime() });
+  res.status(200).json(healthPayload());
 });
 app.get("/api/health", (_req, res) => {
-  res.status(200).json({ status: "ok", uptime: process.uptime() });
+  res.status(200).json(healthPayload());
 });
 
 app.use(
@@ -95,6 +105,7 @@ app.use((req, res, next) => {
   // Register routes
   await registerRoutes(httpServer, app);
   await registerAdminRoutes(app);
+  registerGrowthRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

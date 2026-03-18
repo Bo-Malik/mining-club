@@ -80,8 +80,9 @@ export function Referral({ userId }: ReferralProps) {
   });
 
   const referralCode = codeData?.code || "Loading...";
-  const referralLink = codeData?.code 
-    ? `${window.location.origin}/signup?ref=${codeData.code}`
+  const publicBaseUrl = import.meta.env.VITE_PUBLIC_APP_URL || "https://hardisk.co";
+  const referralLink = codeData?.code
+    ? `${publicBaseUrl}/r/${codeData.code}`
     : "";
   const myReferrals = stats?.totalReferrals || 0;
   const myEarnings = stats?.totalEarnings || 0;
