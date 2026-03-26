@@ -101,7 +101,7 @@ export function StarterMiner({ onBack }: StarterMinerProps) {
                 {isLoading ? "—" : `${reward?.hashrate ?? 0.5}`}
               </p>
               <p className="text-lg font-semibold text-muted-foreground">TH/s Hashrate</p>
-              <p className="text-xs text-muted-foreground mt-1">SHA-256 · Bitcoin (BTC)</p>
+              <p className="text-xs text-muted-foreground mt-1">SHA-256 Cloud Mining · Bitcoin (BTC)</p>
             </div>
 
             {/* Stats */}
@@ -171,10 +171,10 @@ export function StarterMiner({ onBack }: StarterMinerProps) {
           </div>
           <div className="space-y-3 text-sm text-muted-foreground">
             {[
-              "Every new hardisk user receives 0.5 TH/s of real Bitcoin mining hashrate for 30 days — completely free, no purchase required.",
-              "Your hashrate is allocated to our pool and begins mining immediately after signup.",
-              "Estimated daily earnings are credited based on current Bitcoin network difficulty.",
-              "After 30 days, you can continue mining by purchasing a mining package.",
+              "Every new BlockMint user receives 0.5 TH/s of cloud Bitcoin mining power for 365 days — completely free, no purchase required.",
+              "Mining is performed entirely on our cloud infrastructure. Your device is not used for mining — this is a signup reward.",
+              "Estimated daily earnings are credited based on current Bitcoin network difficulty. You can earn approximately $16 over the full year.",
+              "Upgrade to a paid plan anytime for significantly higher returns. The free miner is a taste of what dedicated hashpower can deliver.",
             ].map((t, i) => (
               <div key={i} className="flex gap-3">
                 <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
@@ -192,7 +192,7 @@ export function StarterMiner({ onBack }: StarterMinerProps) {
             </div>
             <div className="flex-1">
               <p className="font-semibold text-sm">Upgrade Your Hashrate</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Get 6–30 TH/s with a Pro or Premium plan. Keep mining after your starter period ends.</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Get 6–30 TH/s with a Pro or Premium plan. Earn up to 50x more than the free tier — real returns you can count on.</p>
             </div>
           </div>
           <Button

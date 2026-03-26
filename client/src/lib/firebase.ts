@@ -2,11 +2,12 @@
 import { initializeApp } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
 import { 
-  getAuth, 
+  getAuth,
   signInWithPopup,
   signInWithRedirect,
   signInWithCredential,
-  getRedirectResult, 
+  signInWithCustomToken,
+  getRedirectResult,
   GoogleAuthProvider,
   OAuthProvider,
   signInWithEmailAndPassword,
@@ -74,62 +75,165 @@ const appleProvider = new OAuthProvider('apple.com');
 appleProvider.addScope('email');
 appleProvider.addScope('name');
 
-function shouldUseGoogleRedirectFallback(): boolean {
+function shouldUseWebRedirectFallback(): boolean {
   if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-  // CRITICAL FIX: On Capacitor native (iOS / Android), signInWithPopup opens an
-  // SFSafariViewController / Chrome Custom Tab that stays IN-PROCESS.
-  // signInWithRedirect instead opens the SYSTEM browser — when the user returns,
-  // the WebView's sessionStorage is gone → Firebase throws "missing initial state".
-  // On native we must always use popup, never redirect.
-  if (Capacitor.isNativePlatform()) return false;
+  if (Capacitor.isNativePlatform()) return false; // never redirect on native
   const ua = navigator.userAgent || "";
-  // On the web, only redirect for social in-app browsers that block popups
   const isInAppBrowser = /FBAN|FBAV|Instagram|Line|Twitter|Snapchat|TikTok/i.test(ua);
   return isInAppBrowser;
 }
 
-// Sign in with Google
-export async function signInWithGoogle() {
+/**
+ * iOS-specific Google Sign-In using @capacitor/browser.
+ *
+ * Root cause: On Capacitor iOS, both signInWithPopup and signInWithRedirect open the
+ * SYSTEM Safari browser. Firebase's popup flow relies on window.opener.postMessage()
+ * which is null in an external browser, so the result never makes it back to the app.
+ *
+ * Solution: Open our own /google-auth helper page in an SFSafariViewController
+ * (in-app browser via @capacitor/browser).  That page performs a proper
+ * signInWithRedirect flow in a real browser context, then POSTs the Firebase ID token
+ * to our backend.  The backend creates a Firebase custom token which the app
+ * picks up by polling, then calls signInWithCustomToken to complete sign-in.
+ */
+async function googleSignInViaBrowser(): Promise<User | null> {
+  const { Browser } = await import('@capacitor/browser');
+
+  const sessionId = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+
+  let settled = false;
+  let resolvePromise!: (u: User | null) => void;
+  let rejectPromise!: (e: unknown) => void;
+
+  const mainPromise = new Promise<User | null>((res, rej) => {
+    resolvePromise = res;
+    rejectPromise = rej;
+  });
+
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
+  let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
+  const listeners: Array<{ remove: () => void }> = [];
+
+  const cleanup = () => {
+    if (pollTimer) clearInterval(pollTimer);
+    if (timeoutTimer) clearTimeout(timeoutTimer);
+    listeners.forEach(l => l.remove());
+  };
+
+  // Open the helper page
   try {
-    if (!auth) {
-      console.warn("signInWithGoogle called but Firebase is not configured");
-      return null;
+    await Browser.open({
+      url: `https://hardisk.co/google-auth?sid=${sessionId}`,
+      toolbarColor: '#0a0a0f',
+      presentationStyle: 'fullscreen',
+    });
+  } catch (e) {
+    rejectPromise(e);
+    return mainPromise;
+  }
+
+  // Poll the backend every 1.5 s for the custom token
+  pollTimer = setInterval(async () => {
+    if (settled) return;
+    try {
+      const resp = await fetch(`/api/auth/google/result/${sessionId}`);
+      if (resp.status === 410) {
+        settled = true;
+        cleanup();
+        Browser.close().catch(() => {});
+        rejectPromise(new Error('Session expired — please try again'));
+        return;
+      }
+      const data: { ready: boolean; customToken?: string } = await resp.json();
+      if (data.ready && data.customToken) {
+        settled = true;
+        cleanup();
+        try {
+          await Browser.close();
+          const result = await signInWithCustomToken(auth!, data.customToken);
+          resolvePromise(result.user);
+        } catch (e) {
+          rejectPromise(e);
+        }
+      }
+    } catch (_) { /* network blip — retry next tick */ }
+  }, 1500);
+
+  // Hard timeout after 3 minutes
+  timeoutTimer = setTimeout(() => {
+    if (!settled) {
+      settled = true;
+      cleanup();
+      Browser.close().catch(() => {});
+      rejectPromise(new Error('TIMEOUT'));
     }
-    const useRedirect = shouldUseGoogleRedirectFallback();
-    // In in-app browsers / iOS we go straight to redirect to avoid popup blocks
-    if (useRedirect) {
+  }, 3 * 60 * 1000);
+
+  // User manually closed the browser before auth completed
+  Browser.addListener('browserFinished', async () => {
+    if (settled) return;
+    // One final check — helper page may have just finished posting the token
+    try {
+      const resp = await fetch(`/api/auth/google/result/${sessionId}`);
+      const data: { ready: boolean; customToken?: string } = await resp.json();
+      if (data.ready && data.customToken) {
+        settled = true;
+        cleanup();
+        const result = await signInWithCustomToken(auth!, data.customToken);
+        resolvePromise(result.user);
+        return;
+      }
+    } catch (_) {}
+    settled = true;
+    cleanup();
+    resolvePromise(null); // user cancelled
+  }).then(l => listeners.push(l));
+
+  return mainPromise;
+}
+
+// Sign in with Google
+export async function signInWithGoogle(): Promise<User | null> {
+  if (!auth) {
+    console.warn("signInWithGoogle called but Firebase is not configured");
+    return null;
+  }
+
+  // iOS native: use a dedicated browser-based helper to avoid the external-browser trap
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+    return googleSignInViaBrowser();
+  }
+
+  // Web / Android: popup with in-app-browser redirect fallback
+  try {
+    if (shouldUseWebRedirectFallback()) {
       await signInWithRedirect(auth, googleProvider);
       throw new Error("REDIRECT_STARTED");
     }
 
-    const popupTimeoutMs = import.meta.env.PROD ? 12000 : 20000;
+    const popupTimeoutMs = import.meta.env.PROD ? 14000 : 20000;
     const popupResult = await Promise.race([
       signInWithPopup(auth, googleProvider),
       new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("POPUP_TIMEOUT")), popupTimeoutMs);
       }),
     ]);
-
     return popupResult.user;
   } catch (error) {
     const err = error as any;
     const code = err?.code || "";
-    const isPopupBlocked =
+    const isPopupIssue =
       err?.message === "POPUP_TIMEOUT" ||
       code === "auth/popup-blocked" ||
       code === "auth/popup-closed-by-user" ||
       code === "auth/cancelled-popup-request" ||
       code === "auth/operation-not-supported-in-this-environment";
 
-    if (isPopupBlocked) {
-      // On native Capacitor never redirect — it breaks sessionStorage.
-      // On web, redirect is safe as a last resort.
-      if (!Capacitor.isNativePlatform() && auth) {
-        console.warn("Google popup blocked on web — falling back to redirect.", error);
-        await signInWithRedirect(auth, googleProvider);
-        throw new Error("REDIRECT_STARTED");
-      }
-      throw new Error("GOOGLE_POPUP_BLOCKED");
+    if (isPopupIssue && !Capacitor.isNativePlatform() && auth) {
+      console.warn("Google popup issue on web — falling back to redirect.", code);
+      await signInWithRedirect(auth, googleProvider);
+      throw new Error("REDIRECT_STARTED");
     }
 
     console.error("Google sign-in error:", error);
@@ -137,7 +241,7 @@ export async function signInWithGoogle() {
   }
 }
 
-// Handle redirect result (used after signInWithRedirect)
+// Handle redirect result (used after signInWithRedirect on web)
 export async function getRedirectAuthResult() {
   if (!auth) return null;
   try {

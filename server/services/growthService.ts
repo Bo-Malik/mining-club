@@ -33,7 +33,7 @@ async function getNumericSetting(key: string, fallback: number): Promise<number>
 
 // ─── PUBLIC BASE URL ──────────────────────────────────────────────────────────
 export function getPublicBaseUrl(): string {
-  return process.env.PUBLIC_APP_URL ?? "https://hardisk.co";
+  return process.env.PUBLIC_APP_URL ?? "https://blockmint.app";
 }
 
 export function makeReferralLink(code: string): string {
@@ -57,7 +57,7 @@ export const growthService = {
 
       // Load config from app_settings / env
       const hashrate       = await getNumericSetting("starter_hashrate_ths",     0.5);
-      const durationDays   = await getNumericSetting("starter_duration_days",     30);
+      const durationDays   = await getNumericSetting("starter_duration_days",     365);
       const dailyReturnBtc = await getNumericSetting("starter_daily_return_btc",  0.000001);
 
       const now     = new Date();
@@ -100,8 +100,8 @@ export const growthService = {
         userId,
         type:     "reward",
         category: "user",
-        title:    "🎉 Your Free Starter Miner is Active!",
-        message:  `You've been awarded ${hashrate} TH/s of free Bitcoin mining power for ${durationDays} days. Welcome to hardisk!`,
+        title:    "Your Free Starter Miner is Active!",
+        message:  `You've been awarded ${hashrate} TH/s of free cloud Bitcoin mining power for ${durationDays} days. Welcome to BlockMint!`,
         data:     { starterRewardId: reward.id, hashrate, durationDays },
         priority: "high",
       });
@@ -343,7 +343,7 @@ export const growthService = {
       if (existing.length > 0) return existing[0];
 
       // Check cap
-      const cap = await getNumericSetting("founder_cap", 500);
+      const cap = await getNumericSetting("founder_cap", 1000);
       const [countRow] = await db.select({ c: count() }).from(schema.founderMembers);
       const currentCount = Number(countRow?.c ?? 0);
       if (currentCount >= cap) return null;
@@ -355,11 +355,11 @@ export const growthService = {
       const [member] = await db.insert(schema.founderMembers).values({
         userId,
         sequence,
-        tier:     sequence <= 100 ? "founding" : sequence <= 300 ? "early" : "community",
+        tier:     sequence <= 200 ? "founding" : sequence <= 600 ? "early" : "community",
         benefits: {
           badge:          true,
           founderSequence: sequence,
-          tier:           sequence <= 100 ? "founding" : sequence <= 300 ? "early" : "community",
+          tier:           sequence <= 200 ? "founding" : sequence <= 600 ? "early" : "community",
         },
       }).returning();
 
@@ -393,7 +393,7 @@ export const growthService = {
    * Get founder club stats (public progress surface).
    */
   async getFounderStats() {
-    const cap      = await getNumericSetting("founder_cap", 500);
+    const cap      = await getNumericSetting("founder_cap", 1000);
     const [countRow] = await db.select({ c: count() }).from(schema.founderMembers);
     const claimed  = Number(countRow?.c ?? 0);
     const remaining = Math.max(0, cap - claimed);
@@ -450,7 +450,7 @@ export const growthService = {
       type:     "system",
       category: "user",
       title:    "Ambassador Application Received",
-      message:  "Your application to become a hardisk Ambassador is under review. We'll notify you within 48 hours.",
+      message:  "Your application to become a BlockMint Ambassador is under review. We'll notify you within 48 hours.",
       data:     {},
       priority: "normal",
     });
@@ -463,13 +463,13 @@ export const growthService = {
       .set({ isAmbassador: true, ambassadorStatus: "active", ambassadorApprovedAt: new Date() })
       .where(eq(schema.users.id, userId));
 
-    await this.grantBadge(userId, "ambassador", "hardisk Ambassador");
+    await this.grantBadge(userId, "ambassador", "BlockMint Ambassador");
 
     await notificationService.create({
       userId,
       type:     "reward",
       category: "user",
-      title:    "🌟 You're Now a hardisk Ambassador!",
+      title:    "You're Now a BlockMint Ambassador!",
       message:  "Your ambassador application was approved. You now have access to ambassador perks and extended referral tracking.",
       data:     { ambassadorId: userId },
       priority: "high",
@@ -547,7 +547,7 @@ export const growthService = {
     } catch {
       return {
         activeUsers: 0, founderMembers: 0, activeMiners: 0, totalHashrateThs: 0,
-        founderCap: 500, founderRemaining: 500, founderPct: 0,
+        founderCap: 1000, founderRemaining: 1000, founderPct: 0,
         uptime: "99.97%", supportedCoins: ["BTC", "LTC"], poolFeePercent: 2.0,
         referralRewardUsd: 10, referralQualifyMinUsd: 50,
       };

@@ -727,31 +727,7 @@ export function Dashboard({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        {/* Growth Hub banner — shown until user has active purchases */}
-        {!activeMiningPurchases.length && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-          >
-            <Link href="/growth">
-              <div className="relative rounded-2xl overflow-hidden border border-orange-500/40 p-4 cursor-pointer active:scale-[0.98] transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-600/25 via-amber-500/15 to-yellow-400/10" />
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/20 rounded-full blur-2xl" />
-                <div className="relative z-10 flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/30">
-                    <Gift className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground">🎉 Free Starter Miner — Claim Yours!</p>
-                    <p className="text-xs text-muted-foreground truncate">0.5 TH/s · 30 days free · No card required</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-orange-400 shrink-0" />
-                </div>
-              </div>
-            </Link>
-          </motion.div>
-        )}
+
 
         <LiquidGlassCard key={`portfolio-${convertedBalance}`} glow="btc" delay={0.1} variant="strong" topFade className="relative">
         <div className="absolute -right-4 -top-4 w-32 h-32 pointer-events-none z-20">
@@ -1186,27 +1162,7 @@ export function Dashboard({
         </div>
       </LiquidGlassCard>
 
-      {/* Growth Hub quick entry - visible near top */}
-      <Link href="/growth">
-        <GlassCard
-          delay={0.18}
-          className="p-4 mb-2 hover-elevate cursor-pointer border-orange-500/30 bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent"
-          data-testid="card-growth-hub-top"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shrink-0">
-              <Gift className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground font-display leading-tight">Growth Hub</p>
-              <p className="text-xs text-muted-foreground truncate">Starter Miner مجاني · إحالات $10 · نادي المؤسسين</p>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-orange-500/15 flex items-center justify-center">
-              <ArrowRight className="w-4 h-4 text-orange-400" />
-            </div>
-          </div>
-        </GlassCard>
-      </Link>
+
 
       {/* Hashrate and Active Contracts - Moved to top */}
       <motion.div
@@ -1276,7 +1232,7 @@ export function Dashboard({
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <span className="text-2xl">⛏️</span>
+              <Fan className="w-6 h-6 text-emerald-400" />
             </motion.div>
             
             <div className="flex-1">
@@ -1300,39 +1256,41 @@ export function Dashboard({
         </motion.div>
       </motion.div>
 
-      {/* Referral and Rate App Cards */}
+      {/* Growth Hub & Rate App Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35 }}
         className="grid grid-cols-2 gap-3"
       >
-        <Link href="/referral">
+        <Link href="/growth">
           <motion.div
             className="relative overflow-hidden rounded-2xl cursor-pointer hover-elevate h-40"
             whileTap={{ scale: 0.98 }}
-            data-testid="card-invite-friend"
+            data-testid="card-growth-hub-main"
           >
-            <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-blue-950/60 dark:via-slate-900/80 dark:to-slate-950 bg-gradient-to-br from-blue-100/80 via-slate-50/90 to-blue-50" />
+            <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-orange-950/60 dark:via-slate-900/80 dark:to-slate-950 bg-gradient-to-br from-orange-100/80 via-slate-50/90 to-orange-50" />
             <svg className="absolute inset-0 w-full h-full opacity-30 dark:opacity-30 opacity-20" viewBox="0 0 400 200">
               <defs>
                 <radialGradient id="grad1" cx="30%" cy="30%">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4"/>
-                  <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0"/>
+                  <stop offset="0%" stopColor="#f97316" stopOpacity="0.4"/>
+                  <stop offset="100%" stopColor="#9a3412" stopOpacity="0"/>
                 </radialGradient>
                 <radialGradient id="grad2" cx="70%" cy="70%">
-                  <stop offset="0%" stopColor="#1e40af" stopOpacity="0.3"/>
-                  <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0"/>
+                  <stop offset="0%" stopColor="#ea580c" stopOpacity="0.3"/>
+                  <stop offset="100%" stopColor="#9a3412" stopOpacity="0"/>
                 </radialGradient>
               </defs>
               <circle cx="80" cy="40" r="120" fill="url(#grad1)"/>
               <circle cx="320" cy="160" r="100" fill="url(#grad2)"/>
-              <path d="M0,120 Q100,80 200,100 T400,120 L400,200 L0,200 Z" fill="#3b82f6" fillOpacity="0.08"/>
+              <path d="M0,120 Q100,80 200,100 T400,120 L400,200 L0,200 Z" fill="#f97316" fillOpacity="0.08"/>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <img src="https://cdn3d.iconscout.com/3d/premium/thumb/user-referral-3d-icon-png-download-9801460.png" alt="Referral" className="w-16 h-16" />
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-lg">
+                <Gift className="w-7 h-7 text-white" />
+              </div>
               <p className="text-sm font-semibold text-foreground text-center px-3 leading-snug">
-                Invite a Friend, Both Receive <span className="text-blue-400 font-bold">$5 in USDT</span>
+                Refer & Earn <span className="text-orange-400 font-bold">$10 USDT</span> Per Friend
               </p>
             </div>
           </motion.div>
@@ -1698,26 +1656,7 @@ export function Dashboard({
             </div>
           </GlassCard>
 
-          <Link href="/growth">
-            <GlassCard
-              delay={0.7}
-              className="p-4 hover-elevate cursor-pointer border-orange-500/20"
-              data-testid="card-growth-hub"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shrink-0">
-                  <Gift className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-foreground font-display">Growth Hub</p>
-                  <p className="text-sm text-muted-foreground">Free Miner · Referrals · Founding Club</p>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-orange-400" />
-                </div>
-              </div>
-            </GlassCard>
-          </Link>
+
         </div>
       </motion.div>
       </motion.div>
@@ -1739,8 +1678,8 @@ export function Dashboard({
                   <Gift className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-lg font-bold">🎉 Free Starter Miner!</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">You've been given <span className="text-orange-400 font-semibold">0.5 TH/s free</span> for 30 days — no purchase needed.</p>
+                  <p className="text-lg font-bold">Free Starter Miner</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">You've been given <span className="text-orange-400 font-semibold">0.5 TH/s free</span> cloud mining power for 365 days — no purchase needed.</p>
                 </div>
                 <button
                   aria-label="Dismiss starter miner modal"
@@ -1758,9 +1697,9 @@ export function Dashboard({
               <div className="space-y-2 text-sm">
                 {[
                   "Activated automatically — no card required",
-                  "Earns real Bitcoin (Satoshis) every day for 30 days",
+                  "Earns real Bitcoin (Satoshis) every day for 365 days",
                   "Share your referral link to earn $10 USDT per friend",
-                  "First 500 users get a permanent Founding Member badge",
+                  "First 1,000 users get a permanent Founding Member badge",
                 ].map((perk) => (
                   <div key={perk} className="flex items-start gap-2 text-muted-foreground">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />

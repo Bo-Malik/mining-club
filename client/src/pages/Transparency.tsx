@@ -62,7 +62,7 @@ export function Transparency({ onBack }: TransparencyProps) {
               Full Transparency
             </h2>
             <p className="text-sm text-muted-foreground">
-              Real numbers, no hype. Here's the current state of the hardisk platform.
+              Real numbers, no hype. Here's the current state of the BlockMint platform.
             </p>
           </div>
         </motion.div>
@@ -134,7 +134,7 @@ export function Transparency({ onBack }: TransparencyProps) {
           </h3>
           <div className="space-y-3 text-xs text-muted-foreground">
             <p>
-              Miners are virtual hashrate allocations on real BTC and LTC mining pools. Your purchased hashrate runs 24/7 and earnings are credited to your hardisk wallet daily.
+              Miners are virtual hashrate allocations on real BTC and LTC mining pools. Your purchased hashrate runs 24/7 and earnings are credited to your BlockMint wallet daily.
             </p>
             <p>
               Earnings are calculated based on current network difficulty, coin price, and your allocated hashrate. They fluctuate with BTC/LTC market conditions — we never guarantee fixed returns.

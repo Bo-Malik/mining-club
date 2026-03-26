@@ -275,10 +275,10 @@ export default function Support() {
                 You can also reach us directly at:
               </p>
               <a 
-                href="mailto:info@hardisk.co" 
+                href="mailto:info@blockmint.app" 
                 className="text-amber-500 hover:text-amber-400 transition-colors"
               >
-                info@hardisk.co
+                info@blockmint.app
               </a>
             </div>
           </GlassCard>

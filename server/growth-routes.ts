@@ -76,7 +76,7 @@ export function registerGrowthRoutes(app: Express) {
       const u = users[0];
       return res.json({
         code,
-        displayName: u.displayName ?? "A hardisk Miner",
+        displayName: u.displayName ?? "A BlockMint Miner",
         isFounder:   !!u.isFounder,
         founderSequence: u.founderSequence,
         signupUrl:   `${getPublicBaseUrl()}/r/${code}`,
@@ -324,7 +324,7 @@ export function registerGrowthRoutes(app: Express) {
     const users = await db.select({ displayName: schema.users.displayName })
       .from(schema.users)
       .where(eq(schema.users.referralCode, code));
-    const name = users[0]?.displayName ?? "A hardisk Miner";
+    const name = users[0]?.displayName ?? "A BlockMint Miner";
     const url  = getPublicBaseUrl();
 
     // Return HTML with rich OG meta + redirect to the app
@@ -334,14 +334,14 @@ export function registerGrowthRoutes(app: Express) {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>${name} invited you to hardisk — Free Bitcoin Mining</title>
-  <meta property="og:title"       content="${name} invited you to hardisk"/>
-  <meta property="og:description" content="Join hardisk and start mining Bitcoin today. Your first 0.5 TH/s is free for 30 days."/>
+  <title>${name} invited you to BlockMint — Free Bitcoin Mining</title>
+  <meta property="og:title"       content="${name} invited you to BlockMint"/>
+  <meta property="og:description" content="Join BlockMint and start mining Bitcoin today. Your first 0.5 TH/s is free for 365 days."/>
   <meta property="og:url"         content="${url}/r/${code}"/>
   <meta property="og:image"       content="${url}/og-referral.png"/>
   <meta property="og:type"        content="website"/>
   <meta name="twitter:card"       content="summary_large_image"/>
-  <meta name="twitter:title"      content="${name} invited you to hardisk"/>
+  <meta name="twitter:title"      content="${name} invited you to BlockMint"/>
   <meta name="twitter:description" content="Start mining Bitcoin for free. No hardware needed."/>
   <meta name="twitter:image"      content="${url}/og-referral.png"/>
   <meta name="apple-itunes-app"   content="app-id=APPSTOREID, app-argument=${url}/r/${code}"/>
@@ -360,9 +360,9 @@ export function registerGrowthRoutes(app: Express) {
   </style>
 </head>
 <body>
-  <div class="logo">hardisk</div>
+  <div class="logo">BlockMint</div>
   <h1>${name} invited you to start mining Bitcoin for free</h1>
-  <p>Join hardisk and get 0.5 TH/s free for your first 30 days. No hardware. No upfront cost.</p>
+  <p>Join BlockMint and get 0.5 TH/s free cloud mining for 365 days. No hardware. No upfront cost.</p>
   <a class="cta" href="${url}?ref=${code}">Accept Invite &amp; Start Mining</a>
 </body>
 </html>`);

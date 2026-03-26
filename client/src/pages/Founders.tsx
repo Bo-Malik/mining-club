@@ -29,7 +29,7 @@ interface FoundersProps {
 
 const TIER_BENEFITS: Record<string, { label: string; perks: string[] }> = {
   founding: {
-    label: "Founding Tier (1–100)",
+    label: "Founding Tier (1–200)",
     perks: [
       "Permanent Founding Member badge on your profile",
       "Priority customer support",
@@ -39,7 +39,7 @@ const TIER_BENEFITS: Record<string, { label: string; perks: string[] }> = {
     ],
   },
   early: {
-    label: "Early Adopter Tier (101–300)",
+    label: "Early Adopter Tier (201–600)",
     perks: [
       "Early Adopter badge on your profile",
       "Priority customer support",
@@ -47,7 +47,7 @@ const TIER_BENEFITS: Record<string, { label: string; perks: string[] }> = {
     ],
   },
   community: {
-    label: "Community Tier (301–500)",
+    label: "Community Tier (601–1000)",
     perks: [
       "Community Member badge on your profile",
       "Community recognition",
@@ -119,7 +119,7 @@ export function Founders({ onBack }: FoundersProps) {
               Founding Miners Club
             </h2>
             <p className="text-sm text-muted-foreground">
-              Join the first {cap} miners to ever join hardisk. Permanent badge. Exclusive benefits.
+              Join the first {cap} miners on BlockMint. Permanent badge. Exclusive benefits.
             </p>
           </div>
         </motion.div>
@@ -204,8 +204,8 @@ export function Founders({ onBack }: FoundersProps) {
             </div>
             <div className="space-y-3 text-sm text-muted-foreground">
               {[
-                "Sign up for hardisk (automatically gets you a starter miner)",
-                "Founding spot is automatically granted to the first 500 eligible users",
+                "Sign up for BlockMint (automatically gets you a starter miner)",
+                "Founding spot is automatically granted to the first 1,000 eligible users",
                 "No purchase required – signing up is enough",
                 "Founding status is permanent and cannot be transferred",
               ].map((step, i) => (
@@ -219,7 +219,7 @@ export function Founders({ onBack }: FoundersProps) {
               className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white border-0"
               onClick={() => navigate("/")}
             >
-              Join hardisk Now <ChevronRight className="w-4 h-4 ml-1" />
+              Join BlockMint Now <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </GlassCard>
         )}

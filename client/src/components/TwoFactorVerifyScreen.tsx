@@ -333,7 +333,7 @@ export function TwoFactorVerifyScreen({ userId, onSuccess, onBack }: TwoFactorVe
           >
             <p className="text-muted-foreground text-sm mb-2">Lost access to your authenticator?</p>
             <a
-              href="mailto:support@hardisk.co?subject=Reset%20My%20Two-Auth&body=I%20need%20help%20resetting%20my%20two-factor%20authentication%20for%20my%20BlockMint%20account."
+              href="mailto:support@blockmint.app?subject=Reset%20My%20Two-Auth&body=I%20need%20help%20resetting%20my%20two-factor%20authentication%20for%20my%20BlockMint%20account."
               className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
             >
               <Mail className="w-4 h-4" />

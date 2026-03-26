@@ -36,7 +36,7 @@ export function ReferralLanding() {
     staleTime: 300_000,
   });
 
-  const referrerName: string = referrerInfo?.displayName ?? "A hardisk miner";
+  const referrerName: string = referrerInfo?.displayName ?? "A BlockMint miner";
   const isFounder: boolean = referrerInfo?.isFounder ?? false;
 
   return (
@@ -56,7 +56,7 @@ export function ReferralLanding() {
           <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-2xl shadow-orange-500/30">
             <Cpu className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-black">hardisk</h1>
+          <h1 className="text-2xl font-black">BlockMint</h1>
           <p className="text-xs text-muted-foreground">Bitcoin mining, made simple.</p>
         </motion.div>
 
@@ -80,7 +80,7 @@ export function ReferralLanding() {
             <div className="space-y-2 text-left mb-5">
               {[
                 { icon: Gift,  text: "Get a free 0.5 TH/s starter miner" },
-                { icon: Cpu,   text: "Earn real Bitcoin for 30 days" },
+                { icon: Cpu,   text: "Earn real Bitcoin for 365 days" },
                 { icon: Users, text: "Refer friends and earn $10 USDT each" },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -100,14 +100,14 @@ export function ReferralLanding() {
             </Button>
 
             <p className="text-[10px] text-muted-foreground mt-3">
-              No credit card required. Free for 30 days.
+              No credit card required. Free for 365 days.
             </p>
           </div>
         </motion.div>
 
         {/* Footer note */}
         <p className="text-xs text-muted-foreground">
-          By signing up you agree to hardisk's Terms of Service. Mining rewards fluctuate with BTC market conditions.
+          By signing up you agree to BlockMint's Terms of Service. Mining rewards fluctuate with BTC market conditions.
         </p>
       </div>
     </div>

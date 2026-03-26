@@ -2075,6 +2075,143 @@ export async function registerRoutes(
     }
   });
 
+  // ── Google Sign-In via Browser (iOS Capacitor) ──────────────────────────────
+  // Sessions are short-lived (5 min).  Keys are random; values are single-use.
+  const googleAuthSessions = new Map<string, { customToken: string; ts: number }>();
+  const GOOGLE_SESSION_TTL = 5 * 60 * 1000;
+
+  // Cleanup stale sessions periodically (runs every 5 min)
+  setInterval(() => {
+    const now = Date.now();
+    googleAuthSessions.forEach((v, k) => {
+      if (now - v.ts > GOOGLE_SESSION_TTL) googleAuthSessions.delete(k);
+    });
+  }, GOOGLE_SESSION_TTL);
+
+  // Helper page served to @capacitor/browser — handles Google OAuth in a real browser
+  app.get("/google-auth", (_req, res) => {
+    const cfg = {
+      apiKey: process.env.VITE_FIREBASE_API_KEY || "",
+      authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || `${process.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+      projectId: process.env.VITE_FIREBASE_PROJECT_ID || "",
+      appId: process.env.VITE_FIREBASE_APP_ID || "",
+    };
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sign in with Google</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,sans-serif;background:#0a0a0f;color:#fff;
+         display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem}
+    .card{text-align:center;max-width:340px;width:100%}
+    .logo{font-size:2.5rem;margin-bottom:1rem}
+    h2{font-size:1.25rem;margin-bottom:.5rem}
+    p{color:rgba(255,255,255,.55);font-size:.875rem;margin-bottom:1.5rem;line-height:1.5}
+    .spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:#10b981;
+          border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .err{color:#f87171}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">₿</div>
+  <div class="spin" id="spin"></div>
+  <h2 id="title">Connecting to Google…</h2>
+  <p id="sub">Please wait</p>
+</div>
+<script type="module">
+  import{initializeApp}from'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
+  import{getAuth,signInWithRedirect,getRedirectResult,GoogleAuthProvider}
+    from'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  const cfg=${JSON.stringify(cfg)};
+  const sid=new URLSearchParams(location.search).get('sid');
+  const app=initializeApp(cfg);
+  const auth=getAuth(app);
+  const provider=new GoogleAuthProvider();
+  provider.setCustomParameters({prompt:'select_account'});
+
+  function ui(title,sub,err){
+    document.getElementById('title').textContent=title;
+    document.getElementById('sub').textContent=sub||'';
+    if(err){document.getElementById('spin').style.display='none';
+             document.getElementById('title').className='err';}
+  }
+
+  (async()=>{
+    try{
+      const result=await getRedirectResult(auth);
+      if(result?.user){
+        ui('Almost done…','Completing sign-in');
+        const idToken=await result.user.getIdToken();
+        const r=await fetch('/api/auth/google/session',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({sessionId:sid,idToken})
+        });
+        if(!r.ok)throw new Error((await r.json()).error||'Server error');
+        ui('✓ Signed in!','Returning to app…');
+        location.href='/auth-complete';
+        return;
+      }
+      ui('Redirecting to Google…','You will be asked to choose your account');
+      await signInWithRedirect(auth,provider);
+    }catch(e){
+      ui('Sign-in failed',e.message,true);
+    }
+  })();
+</script>
+</body>
+</html>`;
+    res.type("html").send(html);
+  });
+
+  // Simple "done" page — @capacitor/browser closes when it reaches this URL
+  app.get("/auth-complete", (_req, res) => {
+    res.type("html").send(`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Done</title>
+<style>body{font-family:-apple-system,sans-serif;background:#0a0a0f;color:#fff;
+display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
+h2{color:#10b981}</style></head><body>
+<div><h2>✓ Signed in!</h2><p style="color:rgba(255,255,255,.6);margin-top:.5rem">
+You can return to the app.</p></div></body></html>`);
+  });
+
+  // iOS helper: store custom token for session
+  app.post("/api/auth/google/session", async (req, res) => {
+    const { sessionId, idToken } = req.body || {};
+    if (!sessionId || !idToken) {
+      return res.status(400).json({ error: "Missing sessionId or idToken" });
+    }
+    try {
+      const { verifyIdToken: verifyFn, createCustomToken } = await import("./firebase-admin");
+      const decoded = await verifyFn(idToken);
+      const customToken = await createCustomToken(decoded.uid);
+      googleAuthSessions.set(sessionId, { customToken, ts: Date.now() });
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error("google/session error:", err);
+      return res.status(500).json({ error: err instanceof Error ? err.message : "Failed" });
+    }
+  });
+
+  // iOS helper: poll for custom token
+  app.get("/api/auth/google/result/:sid", (req, res) => {
+    const entry = googleAuthSessions.get(req.params.sid);
+    if (!entry) return res.json({ ready: false });
+    if (Date.now() - entry.ts > GOOGLE_SESSION_TTL) {
+      googleAuthSessions.delete(req.params.sid);
+      return res.status(410).json({ error: "Session expired, please try again" });
+    }
+    googleAuthSessions.delete(req.params.sid); // single-use
+    return res.json({ ready: true, customToken: entry.customToken });
+  });
+
   // Sync Firebase user into database so admin can manage
   app.post("/api/auth/sync", async (req, res) => {
     try {

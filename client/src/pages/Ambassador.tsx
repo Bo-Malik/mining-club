@@ -117,7 +117,7 @@ export function Ambassador({ onBack }: AmbassadorProps) {
               Become an Ambassador
             </h2>
             <p className="text-sm text-muted-foreground">
-              Help grow the hardisk mining community and unlock exclusive rewards & recognition.
+              Help grow the BlockMint mining community and unlock exclusive rewards & recognition.
             </p>
           </div>
         </motion.div>
@@ -159,7 +159,7 @@ export function Ambassador({ onBack }: AmbassadorProps) {
           <h3 className="font-semibold text-sm mb-3">Requirements</h3>
           <div className="space-y-2 text-xs text-muted-foreground">
             {[
-              "Be an active hardisk user",
+              "Be an active BlockMint user",
               "Have made at least one successful referral",
               "Agree to honest, non-spammy promotion practices",
               "Be willing to provide occasional feedback to the team",
@@ -172,7 +172,7 @@ export function Ambassador({ onBack }: AmbassadorProps) {
           </div>
           <div className="mt-3 flex items-start gap-2 text-xs p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
             <AlertCircle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-            <span className="text-muted-foreground">Ambassador status is granted at hardisk's sole discretion and can be revoked for policy violations.</span>
+            <span className="text-muted-foreground">Ambassador status is granted at BlockMint's sole discretion and can be revoked for policy violations.</span>
           </div>
         </GlassCard>
 

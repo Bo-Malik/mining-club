@@ -1,19 +1,17 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Zap, Users, Crown, Star, ChevronRight, Share2,
-  Gift, TrendingUp, Shield, Award, ArrowLeft, Copy, Check,
+  Gift, TrendingUp, Shield, ArrowLeft, Copy, Check,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { StarterMinerCard } from "@/components/StarterMinerCard";
-import { FounderBadge } from "@/components/FounderBadge";
 
-const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://hardisk.co";
+const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://blockmint.app";
 
 function getUserId() {
   try {
@@ -48,10 +46,11 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
     staleTime: 60_000,
   });
 
-  const referralLink = profile?.referral?.referralLink ?? `${PUBLIC_URL}/r/...`;
   const referralCode = profile?.referral?.referralCode ?? "";
+  const referralLink = referralCode ? `${PUBLIC_URL}/r/${referralCode}` : "";
 
   const handleCopy = async () => {
+    if (!referralLink) return;
     try {
       await navigator.clipboard.writeText(referralLink);
       setCopied(true);
@@ -62,11 +61,19 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
     }
   };
 
+  const shareText = `I'm mining Bitcoin with BlockMint — cloud mining, zero hardware. Join free and get your own starter miner:`;
+  const encodedText = encodeURIComponent(shareText);
+  const encodedLink = encodeURIComponent(referralLink);
+
+  const shareToX = () => window.open(`https://x.com/intent/tweet?text=${encodedText}&url=${encodedLink}`, "_blank");
+  const shareToFarcaster = () => window.open(`https://warpcast.com/~/compose?text=${encodedText}%20${encodedLink}`, "_blank");
+  const shareToBluesky = () => window.open(`https://bsky.app/intent/compose?text=${encodedText}%20${encodedLink}`, "_blank");
+
   const pillars = [
     {
       icon: <Zap className="w-5 h-5" />,
       label: "Starter Miner",
-      desc: "Your free 0.5 TH/s is active",
+      desc: "Your free 0.5 TH/s cloud miner",
       color: "from-orange-500 to-amber-400",
       href: "/growth/starter",
       badge: profile?.starterReward?.status === "active" ? "ACTIVE" : undefined,
@@ -101,17 +108,10 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
     <div className="min-h-screen pb-24">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5 px-4 py-3 flex items-center gap-3">
-        {onBack && (
-          <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        )}
+        <button onClick={onBack ?? (() => navigate("/"))} className="text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
         <h1 className="text-lg font-bold">Growth Hub</h1>
-        <div className="ml-auto">
-          <Badge variant="outline" className="text-xs border-primary/30 text-primary">
-            hardisk.co
-          </Badge>
-        </div>
       </div>
 
       <div className="px-4 space-y-5 mt-5">
@@ -146,23 +146,44 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
           />
         )}
 
-        {/* Referral quick actions */}
-        <GlassCard className="space-y-3">
+        {/* Referral Link Section */}
+        <GlassCard className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm">Your Referral Link</h3>
             <span className="text-xs text-muted-foreground">Earn $10 per referral</span>
           </div>
+
           <div className="flex gap-2">
-            <div className="flex-1 bg-white/5 rounded-xl px-3 py-2 text-xs text-muted-foreground truncate font-mono border border-white/5">
-              {referralCode ? `${PUBLIC_URL}/r/${referralCode}` : "Loading…"}
+            <div className="flex-1 bg-white/5 rounded-xl px-3 py-2.5 text-xs text-foreground truncate font-mono border border-white/10">
+              {referralLink || "Loading your link..."}
             </div>
-            <Button size="sm" variant="outline" className="shrink-0" onClick={handleCopy}>
+            <Button size="sm" variant="outline" className="shrink-0 h-9" onClick={handleCopy} disabled={!referralLink}>
               {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
             </Button>
-            <Button size="sm" className="shrink-0 bg-primary/80 hover:bg-primary" onClick={() => navigate("/referral")}>
-              <Share2 className="w-4 h-4 mr-1" /> Share
-            </Button>
           </div>
+
+          {referralLink && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Share and boost your earnings & ranking:</p>
+              <div className="grid grid-cols-3 gap-2">
+                <Button size="sm" variant="outline" className="h-9 text-xs border-white/10 hover:bg-white/5" onClick={shareToX}>
+                  <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  Post on X
+                </Button>
+                <Button size="sm" variant="outline" className="h-9 text-xs border-white/10 hover:bg-white/5" onClick={shareToFarcaster}>
+                  <Share2 className="w-3.5 h-3.5 mr-1.5" />
+                  Farcaster
+                </Button>
+                <Button size="sm" variant="outline" className="h-9 text-xs border-white/10 hover:bg-white/5" onClick={shareToBluesky}>
+                  <Share2 className="w-3.5 h-3.5 mr-1.5" />
+                  Bluesky
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground/70 text-center">
+                Sharing helps you climb the leaderboard and increases your referral earnings.
+              </p>
+            </div>
+          )}
         </GlassCard>
 
         {/* Badges */}
@@ -227,16 +248,16 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
 
 // Badge chip sub-component
 function BadgeChip({ slug, name }: { slug: string; name: string }) {
-  const cfg: Record<string, { color: string; icon: string }> = {
-    starter_miner: { color: "from-orange-500 to-amber-400", icon: "⛏️" },
-    founder:       { color: "from-purple-600 to-pink-500", icon: "👑" },
-    first_referral:{ color: "from-blue-500 to-cyan-400", icon: "🤝" },
-    ambassador:    { color: "from-emerald-500 to-teal-400", icon: "🌟" },
+  const cfg: Record<string, { color: string; icon: React.ReactNode }> = {
+    starter_miner: { color: "from-orange-500 to-amber-400", icon: <Zap className="w-3 h-3" /> },
+    founder:       { color: "from-purple-600 to-pink-500", icon: <Crown className="w-3 h-3" /> },
+    first_referral:{ color: "from-blue-500 to-cyan-400", icon: <Users className="w-3 h-3" /> },
+    ambassador:    { color: "from-emerald-500 to-teal-400", icon: <Star className="w-3 h-3" /> },
   };
-  const c = cfg[slug] ?? { color: "from-gray-500 to-gray-400", icon: "🏅" };
+  const c = cfg[slug] ?? { color: "from-gray-500 to-gray-400", icon: <Shield className="w-3 h-3" /> };
   return (
     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r ${c.color} bg-opacity-20 text-white text-xs font-medium`}>
-      <span>{c.icon}</span>
+      {c.icon}
       <span>{name}</span>
     </div>
   );

@@ -44,7 +44,7 @@ export function ReferralTerms({ onBack }: ReferralTermsProps) {
               { label: "Reward per qualifying referral", value: "$10 USDT" },
               { label: "Minimum friend spend to qualify", value: "$50 USD" },
               { label: "Max referrals per account", value: "Unlimited" },
-              { label: "Reward currency", value: "USDT (credited to hardisk wallet)" },
+              { label: "Reward currency", value: "USDT (credited to BlockMint wallet)" },
               { label: "Reward payment timing", value: "Automatic, within minutes of qualification" },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
@@ -60,8 +60,8 @@ export function ReferralTerms({ onBack }: ReferralTermsProps) {
           <h3 className="font-semibold text-sm mb-3">What Counts as a Qualifying Referral</h3>
           <div className="space-y-2">
             {[
-              "Friend signs up via your unique referral link (https://hardisk.co/r/YOUR_CODE)",
-              "Friend has never had a hardisk account before",
+              "Friend signs up via your unique referral link (https://blockmint.app/r/YOUR_CODE)",
+              "Friend has never had a BlockMint account before",
               "Friend makes a cumulative purchase of $50 USD or more",
               "Friend's payment clears and is not refunded",
             ].map((item) => (
@@ -82,7 +82,7 @@ export function ReferralTerms({ onBack }: ReferralTermsProps) {
               "Creating fake or duplicate accounts",
               "Purchasing and then requesting a refund",
               "Using automated bots, bulk email blasts, or paid ads without permission",
-              "Spreading false claims about hardisk to obtain sign-ups",
+              "Spreading false claims about BlockMint to obtain sign-ups",
             ].map((item) => (
               <div key={item} className="flex gap-2 text-xs text-muted-foreground">
                 <X className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
@@ -100,7 +100,7 @@ export function ReferralTerms({ onBack }: ReferralTermsProps) {
           </div>
           <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
             <p>
-              hardisk uses automated and manual fraud detection. Accounts found to be abusing the referral program will have rewards clawed back and may be permanently suspended.
+              BlockMint uses automated and manual fraud detection. Accounts found to be abusing the referral program will have rewards clawed back and may be permanently suspended.
             </p>
             <p>
               We reserve the right to withhold rewards if we reasonably suspect fraud, even if we cannot confirm it with certainty.
@@ -115,14 +115,14 @@ export function ReferralTerms({ onBack }: ReferralTermsProps) {
         <GlassCard>
           <h3 className="font-semibold text-sm mb-2">Reward Payout Details</h3>
           <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
-            <p>Rewards are credited as USDT to your hardisk in-app wallet. They can be withdrawn subject to standard withdrawal minimums and network fees.</p>
-            <p>Rewards are not transferable and have no cash value outside the hardisk platform.</p>
+            <p>Rewards are credited as USDT to your BlockMint in-app wallet. They can be withdrawn subject to standard withdrawal minimums and network fees.</p>
+            <p>Rewards are not transferable and have no cash value outside the BlockMint platform.</p>
           </div>
         </GlassCard>
 
         {/* Contact */}
         <div className="text-center text-xs text-muted-foreground pb-4">
-          Questions? Contact us at <span className="text-foreground font-medium">support@hardisk.co</span>
+          Questions? Contact us at <span className="text-foreground font-medium">support@blockmint.app</span>
         </div>
 
       </div>

@@ -14,14 +14,14 @@ const STEPS = [
     color: "from-green-500 to-emerald-400",
     title: "Sign Up & Get a Free Starter Miner",
     description:
-      "Create a hardisk account. Instantly get 0.5 TH/s of free Bitcoin mining hashrate — no purchase needed.",
+      "Create a BlockMint account. Instantly get 0.5 TH/s of free Bitcoin mining hashrate — no purchase needed.",
   },
   {
     icon: Cpu,
     color: "from-blue-500 to-cyan-400",
     title: "Your Miner Runs 24/7",
     description:
-      "Your starter miner is active for 30 days. It earns real BTC accumulated in your hardisk wallet as long as it is active.",
+      "Your starter miner is active for 365 days. It earns real BTC accumulated in your BlockMint wallet as long as it is active.",
   },
   {
     icon: Users,
@@ -35,14 +35,14 @@ const STEPS = [
     color: "from-yellow-500 to-orange-400",
     title: "Founding Miners Club",
     description:
-      "The first 500 users to join hardisk earn a permanent Founding Member badge and exclusive benefits. Spots are first-come, first-served.",
+      "The first 1,000 users to join BlockMint earn a permanent Founding Member badge and exclusive benefits. Spots are first-come, first-served.",
   },
   {
     icon: Star,
     color: "from-orange-500 to-red-400",
     title: "Ambassador Program",
     description:
-      "Active community members can apply to become official hardisk ambassadors, unlocking higher rewards, a dedicated badge, and exclusive tools.",
+      "Active community members can apply to become official BlockMint ambassadors, unlocking higher rewards, a dedicated badge, and exclusive tools.",
   },
 ];
 
@@ -69,7 +69,7 @@ export function HowItWorks({ onBack }: HowItWorksProps) {
         >
           <h2 className="text-2xl font-black mb-2">Start mining in seconds.</h2>
           <p className="text-sm text-muted-foreground">
-            hardisk is designed to be simple, transparent, and rewarding. Here's everything you need to know.
+            BlockMint is designed to be simple, transparent, and rewarding. Here's everything you need to know.
           </p>
         </motion.div>
 
@@ -104,11 +104,11 @@ export function HowItWorks({ onBack }: HowItWorksProps) {
           <div className="space-y-4 text-xs text-muted-foreground">
             <div>
               <p className="text-foreground font-medium mb-1">Is the starter miner real?</p>
-              <p>Yes. It is 0.5 TH/s of real hashrate allocated to real BTC mining pools. You actually earn BTC during the 30-day period.</p>
+              <p>Yes. It is 0.5 TH/s of real hashrate allocated to real BTC mining pools. You actually earn BTC during the 365-day period.</p>
             </div>
             <div>
               <p className="text-foreground font-medium mb-1">When does my referral reward arrive?</p>
-              <p>Immediately after your referral completes a $50+ spend. The $10 USDT is credited to your hardisk wallet automatically — no waiting, no manual approval.</p>
+              <p>Immediately after your referral completes a $50+ spend. The $10 USDT is credited to your BlockMint wallet automatically — no waiting, no manual approval.</p>
             </div>
             <div>
               <p className="text-foreground font-medium mb-1">Can I refer myself or create fake accounts?</p>

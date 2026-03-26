@@ -1,5 +1,5 @@
-/* Import Sansation and Space Grotesk from Google Fonts - MUST be at the very top */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sansation:wght@300;400;700&display=swap');
+/* Import Sansation and Outfit from Google Fonts - MUST be at the very top */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sansation:wght@300;400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -56,9 +56,9 @@
   --chart-4: 43 96% 56%;
   --chart-5: 24 95% 53%;
   --font-sans: 'Sansation', 'system-ui', sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-serif: 'Space Grotesk', sans-serif;
+  --font-display: 'Outfit', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --font-serif: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --radius: .5rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(240 5% 10% / 0.00);
@@ -613,13 +613,13 @@ body.admin-mode,
   left: max(env(safe-area-inset-left, 0), 0);
 }
 
-/* Apply Space Grotesk font to all headings and titles */
+/* Apply Outfit font to all headings and titles */
 h1, h2, h3, h4, h5, h6,
 .font-heading,
 .font-display,
 [class*="text-"][class*="font-bold"],
 [class*="text-"][class*="font-semibold"] {
-  font-family: 'Space Grotesk', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
 }
 
 /* Ensure body text uses Sansation */
@@ -627,9 +627,9 @@ body {
   font-family: 'Sansation', system-ui, sans-serif;
 }
 
-/* Titles should use Space Grotesk */
+/* Titles should use Outfit */
 .title, .heading {
-  font-family: 'Space Grotesk', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
 }
 
 .right-safe {

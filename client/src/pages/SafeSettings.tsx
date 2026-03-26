@@ -452,7 +452,7 @@ export function SafeSettings() {
             icon={Mail}
             label="Contact Support"
             description="Get help from our team"
-            onClick={() => window.location.href = "mailto:support@hardisk.co?subject=Hardisk%20Support%20Request&body=Please%20describe%20your%20issue%20below%3A%0A%0A"}
+            onClick={() => window.location.href = "mailto:support@blockmint.app?subject=BlockMint%20Support%20Request&body=Please%20describe%20your%20issue%20below%3A%0A%0A"}
           />
           <SettingItem
             icon={FileText}

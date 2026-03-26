@@ -53,7 +53,7 @@ export function TermsOfService() {
           <GlassCard delay={0.15} className="p-5">
             <h2 className="text-lg font-semibold text-foreground mb-3">1. Acceptance of Terms</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              By accessing or using BlockMint ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not use the Service. BlockMint is operated by Hardisk UAE Mining Farms and provides cryptocurrency hashpower mining services and related features.
+              By accessing or using BlockMint ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not use the Service. BlockMint is operated by BlockMint Mining and provides cryptocurrency hashpower mining services and related features.
             </p>
           </GlassCard>
 
@@ -143,9 +143,9 @@ export function TermsOfService() {
           <GlassCard delay={0.5} className="p-5">
             <h2 className="text-lg font-semibold text-foreground mb-3">8. Intellectual Property</h2>
             <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-              <p>The Service, including its content, features, and functionality, is owned by Hardisk UAE Mining Farms and protected by international copyright, trademark, and other intellectual property laws.</p>
+              <p>The Service, including its content, features, and functionality, is owned by BlockMint Mining and protected by international copyright, trademark, and other intellectual property laws.</p>
               <p>You are granted a limited, non-exclusive, non-transferable license to access and use the Service for personal, non-commercial purposes. You may not copy, modify, distribute, sell, or lease any part of the Service without our written permission.</p>
-              <p>BlockMint, our logo, and other marks are trademarks of Hardisk UAE Mining Farms. You may not use our trademarks without prior written consent.</p>
+              <p>BlockMint, our logo, and other marks are trademarks of BlockMint Mining. You may not use our trademarks without prior written consent.</p>
             </div>
           </GlassCard>
 
@@ -175,7 +175,7 @@ export function TermsOfService() {
           <GlassCard delay={0.65} className="p-5">
             <h2 className="text-lg font-semibold text-foreground mb-3">11. Limitation of Liability</h2>
             <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-              <p className="uppercase font-semibold text-foreground">To the maximum extent permitted by law, BlockMint and Hardisk UAE Mining Farms shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:</p>
+              <p className="uppercase font-semibold text-foreground">To the maximum extent permitted by law, BlockMint and BlockMint Mining shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:</p>
               <ul className="list-disc list-inside space-y-1 ml-2">
                 <li>Loss of profits, revenue, or expected mining returns</li>
                 <li>Loss of data or cryptocurrency</li>
@@ -190,7 +190,7 @@ export function TermsOfService() {
           <GlassCard delay={0.7} className="p-5">
             <h2 className="text-lg font-semibold text-foreground mb-3">12. Indemnification</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              You agree to indemnify, defend, and hold harmless BlockMint, Hardisk UAE Mining Farms, and their officers, directors, employees, and agents from any claims, liabilities, damages, losses, and expenses (including legal fees) arising from: (a) your use of the Service, (b) your violation of these Terms, (c) your violation of any rights of third parties, or (d) any fraudulent or illegal activities.
+              You agree to indemnify, defend, and hold harmless BlockMint, BlockMint Mining, and their officers, directors, employees, and agents from any claims, liabilities, damages, losses, and expenses (including legal fees) arising from: (a) your use of the Service, (b) your violation of these Terms, (c) your violation of any rights of third parties, or (d) any fraudulent or illegal activities.
             </p>
           </GlassCard>
 
@@ -211,7 +211,7 @@ export function TermsOfService() {
           <GlassCard delay={0.8} className="p-5">
             <h2 className="text-lg font-semibold text-foreground mb-3">14. Dispute Resolution</h2>
             <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-              <p><strong className="text-foreground">Informal Resolution:</strong> Before filing a claim, you agree to contact us at info@hardisk.co to attempt to resolve the dispute informally for at least 30 days.</p>
+              <p><strong className="text-foreground">Informal Resolution:</strong> Before filing a claim, you agree to contact us at info@blockmint.app to attempt to resolve the dispute informally for at least 30 days.</p>
               <p><strong className="text-foreground">Arbitration:</strong> Any disputes that cannot be resolved informally shall be resolved through binding arbitration in accordance with the laws of the United Arab Emirates. The arbitration will be conducted in English.</p>
               <p><strong className="text-foreground">Class Action Waiver:</strong> You agree to resolve disputes individually and waive any right to participate in class actions or representative proceedings.</p>
             </div>
@@ -250,9 +250,9 @@ export function TermsOfService() {
             <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
               <p>If you have any questions about these Terms of Service, please contact us:</p>
               <p><strong className="text-foreground">BlockMint</strong></p>
-              <p>Operated by Hardisk UAE Mining Farms</p>
-              <p>Email: info@hardisk.co</p>
-              <p>Website: hardisk.co</p>
+              <p>Operated by BlockMint Mining</p>
+              <p>Email: info@blockmint.app</p>
+              <p>Website: blockmint.app</p>
             </div>
           </GlassCard>
         </motion.div>
@@ -264,7 +264,7 @@ export function TermsOfService() {
           className="mt-8 text-center space-y-2"
         >
           <div className="flex items-center justify-center gap-1">
-            <span className="text-xs text-muted-foreground">BlockMint App By Hardisk UAE Mining Farms</span>
+            <span className="text-xs text-muted-foreground">BlockMint App By BlockMint Mining</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-medium text-primary">
               ©
             </span>

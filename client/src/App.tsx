@@ -475,7 +475,7 @@ function MobileApp() {
           </div>
           <p className="text-xs text-muted-foreground">Cryptocurrency Payments Accepted</p>
           <div className="flex items-center justify-center gap-1">
-            <span className="text-xs text-muted-foreground">BlockMint App By Hardisk UAE Mining Farms</span>
+            <span className="text-xs text-muted-foreground">BlockMint App By BlockMint Mining</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-medium text-primary">
               ©
             </span>
@@ -607,7 +607,7 @@ function AppRouter() {
         {() => <StarterMiner onBack={() => window.history.back()} />}
       </Route>
       <Route path="/growth">
-        {() => <GrowthHub />}
+        {() => <GrowthHub onBack={() => window.history.back()} />}
       </Route>
       <Route path="/founders">
         {() => <Founders onBack={() => window.history.back()} />}

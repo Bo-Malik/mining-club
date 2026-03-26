@@ -1175,7 +1175,7 @@ export function Settings({ settings, onSettingsChange, user, onLogout, onClose }
             icon={Mail}
             label="Contact Support"
             description="Get Help With Your Account"
-            onClick={() => window.open('mailto:info@hardisk.co', '_blank')}
+            onClick={() => window.open('mailto:info@blockmint.app', '_blank')}
             testId="button-contact-support"
           />
         </GlassCard>

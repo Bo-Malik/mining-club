@@ -154,3 +154,11 @@ export async function deleteUser(uid: string) {
     throw error;
   }
 }
+
+// Create a short-lived custom token for a UID (used for iOS browser-based Google Sign-In)
+export async function createCustomToken(uid: string): Promise<string> {
+  if (!adminAuth) {
+    throw new Error("Firebase Admin not initialized");
+  }
+  return adminAuth.createCustomToken(uid);
+}

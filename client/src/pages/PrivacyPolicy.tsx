@@ -115,7 +115,7 @@ export function PrivacyPolicy() {
                 <li>Withdraw consent for marketing communications</li>
                 <li>Data portability where applicable</li>
               </ul>
-              <p className="mt-3">To exercise these rights, please contact us at info@hardisk.co</p>
+              <p className="mt-3">To exercise these rights, please contact us at info@blockmint.app</p>
             </div>
           </GlassCard>
 
@@ -159,9 +159,9 @@ export function PrivacyPolicy() {
             <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
               <p>If you have any questions about this Privacy Policy or our data practices, please contact us:</p>
               <p><strong className="text-foreground">BlockMint</strong></p>
-              <p>Operated by Hardisk UAE Mining Farms</p>
-              <p>Email: info@hardisk.co</p>
-              <p>Website: hardisk.co</p>
+              <p>Operated by BlockMint Mining</p>
+              <p>Email: info@blockmint.app</p>
+              <p>Website: blockmint.app</p>
             </div>
           </GlassCard>
         </motion.div>
@@ -173,7 +173,7 @@ export function PrivacyPolicy() {
           className="mt-8 text-center space-y-2"
         >
           <div className="flex items-center justify-center gap-1">
-            <span className="text-xs text-muted-foreground">BlockMint App By Hardisk UAE Mining Farms</span>
+            <span className="text-xs text-muted-foreground">BlockMint App By BlockMint Mining</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-medium text-primary">
               ©
             </span>
